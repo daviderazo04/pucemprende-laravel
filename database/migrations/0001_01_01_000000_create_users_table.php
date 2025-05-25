@@ -8,7 +8,8 @@ return new class extends Migration
 {
     /**
      * Ejecuta las migraciones.
-     * Esto crea la tabla 'users' con el esquema de tu tabla 'usuarios'.
+     * Esto crea la tabla 'users' con el esquema que coincide más con tus necesidades
+     * y con los requerimientos de Laravel para autenticación y verificación de correo.
      */
     public function up(): void
     {
@@ -24,24 +25,36 @@ return new class extends Migration
             $table->string('clave', 100);
 
             // 'email' varchar(255) UNIQUE
-            $table->string('email', 255)->unique()->nullable(); // Tu esquema permite email nulo, Laravel lo hace único.
+            // Laravel requiere un campo 'email' para la verificación de correo.
+            // Si tu esquema 'usuarios' permite email nulo, mantén nullable.
+            // Para la verificación de correo, el email no debería ser nulo en la práctica.
+            $table->string('email', 255)->unique(); // Preferiblemente no nullable para verificación de correo.
+
+            // 'email_verified_at' timestamp (para verificación de correo)
+            // Esta columna es esencial para que la funcionalidad MustVerifyEmail funcione correctamente.
+            $table->timestamp('email_verified_at')->nullable();
 
             // 'rol_id' int
             $table->integer('rol_id')->nullable(); // Tu esquema no especifica NOT NULL, así que lo hacemos nullable.
 
+            // 'estado' varchar(30)
+            $table->string('estado', 30)->nullable(); // **¡Tu campo 'estado' agregado!**
+
             // 'creado_en' timestamp DEFAULT (now())
-            // 'actualizado_en' timestamp DEFAULT (now())
-            // En lugar de $table->timestamps(), creamos las columnas explícitamente.
             $table->timestamp('creado_en')->useCurrent();
+
+            // 'actualizado_en' timestamp DEFAULT (now())
+            // useCurrentOnUpdate() asegura que se actualice automáticamente en cada modificación.
             $table->timestamp('actualizado_en')->useCurrent()->useCurrentOnUpdate();
 
-            // Las columnas 'email_verified_at' y 'remember_token' no están en tu esquema 'usuarios'.
-            // Por lo tanto, las quitamos de esta migración.
-            // Si las necesitas, tendrías que añadirlas a tu esquema 'usuarios' o crearlas aquí.
+            // 'remember_token' varchar(100) (para "recuérdame" en el login)
+            // Aunque tu esquema 'usuarios' no lo tiene, es una columna estándar de Laravel para seguridad.
+            // Es buena práctica incluirla si usas Auth.
+            $table->rememberToken();
         });
 
-        // Estas tablas son estándar de Laravel y no están en tu esquema 'usuarios'.
-        // Se mantienen si las necesitas para el reseteo de contraseñas y sesiones.
+        // Estas tablas son estándar de Laravel para funcionalidad de autenticación como reseteo de contraseñas y sesiones.
+        // Se recomienda mantenerlas si usas estas características.
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');

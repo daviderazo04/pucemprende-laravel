@@ -16,10 +16,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $usuario
  * @property string $clave
- * @property string|null $email
+ * @property string $email
+ * @property Carbon|null $email_verified_at
  * @property int|null $rol_id
+ * @property string|null $estado
  * @property Carbon $creado_en
  * @property Carbon $actualizado_en
+ * @property string|null $remember_token
  * 
  * @property Role|null $role
  * @property Collection|Persona[] $personas
@@ -32,18 +35,26 @@ class User extends Model
 	public $timestamps = false;
 
 	protected $casts = [
+		'email_verified_at' => 'datetime',
 		'rol_id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime'
+	];
+
+	protected $hidden = [
+		'remember_token'
 	];
 
 	protected $fillable = [
 		'usuario',
 		'clave',
 		'email',
+		'email_verified_at',
 		'rol_id',
+		'estado',
 		'creado_en',
-		'actualizado_en'
+		'actualizado_en',
+		'remember_token'
 	];
 
 	public function role()
