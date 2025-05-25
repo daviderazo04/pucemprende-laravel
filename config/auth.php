@@ -63,6 +63,7 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+            'password' => 'clave', // <-- ¡Esta es la línea clave que modificamos!
         ],
 
         // 'users' => [
