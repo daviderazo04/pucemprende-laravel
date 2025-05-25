@@ -1,48 +1,58 @@
 <?php
 
+/**
+ * Created by Reliese Model.
+ */
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class User extends Authenticatable
+/**
+ * Class User
+ * 
+ * @property int $id
+ * @property string $usuario
+ * @property string $clave
+ * @property string|null $email
+ * @property int|null $rol_id
+ * @property Carbon $creado_en
+ * @property Carbon $actualizado_en
+ * 
+ * @property Role|null $role
+ * @property Collection|Persona[] $personas
+ *
+ * @package App\Models
+ */
+class User extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+	protected $table = 'users';
+	public $timestamps = false;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+	protected $casts = [
+		'rol_id' => 'int',
+		'creado_en' => 'datetime',
+		'actualizado_en' => 'datetime'
+	];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+	protected $fillable = [
+		'usuario',
+		'clave',
+		'email',
+		'rol_id',
+		'creado_en',
+		'actualizado_en'
+	];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+	public function role()
+	{
+		return $this->belongsTo(Role::class, 'rol_id');
+	}
+
+	public function personas()
+	{
+		return $this->hasMany(Persona::class, 'users_id');
+	}
 }
