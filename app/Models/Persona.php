@@ -39,7 +39,7 @@ use Illuminate\Database\Eloquent\Model;
 class Persona extends Model
 {
 	protected $table = 'personas';
-	public $incrementing = false;
+	public $incrementing = true;
 	public $timestamps = false;
 
 	protected $casts = [
