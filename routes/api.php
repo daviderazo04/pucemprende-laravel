@@ -1,15 +1,41 @@
 <?php
 
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-// use App\Http\Controllers\ProfileController; // Puede estar o no, no es crítico ahora
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
+// Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// ESTA LÍNEA es la más importante para que /api/register funcione
-require __DIR__.'/auth.php';
+// Requiere auth y firma para verificar el email
+Route::middleware(['auth:sanctum'])->group(function () {
+    //DESCOMENTAR AL TENER FRONT SADKLFJSAOÑIFJHWIOFHNSADKNFÑSADILJFLASDM!"#$#%"
+    // Ruta a la que el usuario es redirigido al hacer clic en el enlace del email
+    Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+        
 
-// Si tenías otras rutas API, también deberían estar aquí
+    // Ruta para reenviar el email de verificación
+    Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+
+    // Ejemplo de ruta protegida por verificación de email
+    Route::get('/dashboard', function () {
+        return response()->json(['message' => 'Acceso permitido porque estás verificado']);
+    })->middleware('verified');
+});
+
+/*Para probar en postman pero no funca xd 
+// Ruta a la que el usuario es redirigido al hacer clic en el enlace del email
+    Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+        */
+
+// Incluye las rutas de autenticación como /api/register, /api/login, etc.
+require __DIR__.'/auth.php';

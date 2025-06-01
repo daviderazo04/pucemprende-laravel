@@ -40,6 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        /* Era pa probar en postman pero no funciona
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
+        */
     ],
 
     /*

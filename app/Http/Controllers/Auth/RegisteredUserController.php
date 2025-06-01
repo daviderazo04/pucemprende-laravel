@@ -57,7 +57,7 @@ class RegisteredUserController extends Controller
             'estado_borrado' => false, // Valor por defecto
         ]);
 
-        event(new Registered($user));
+        event(new Registered($user)); // esto dispara el correo de verificación automáticamente
 
         Auth::login($user);
 
