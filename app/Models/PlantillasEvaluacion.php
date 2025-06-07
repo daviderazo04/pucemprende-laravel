@@ -29,11 +29,9 @@ use Illuminate\Database\Eloquent\Model;
 class PlantillasEvaluacion extends Model
 {
 	protected $table = 'plantillas_evaluacion';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'proceso_id' => 'int',

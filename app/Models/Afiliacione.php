@@ -27,11 +27,9 @@ use Illuminate\Database\Eloquent\Model;
 class Afiliacione extends Model
 {
 	protected $table = 'afiliaciones';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'persona_id' => 'int',

@@ -27,11 +27,9 @@ use Illuminate\Database\Eloquent\Model;
 class EquiposGanadore extends Model
 {
 	protected $table = 'equipos_ganadores';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'equipo_id' => 'int',

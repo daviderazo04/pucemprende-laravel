@@ -29,11 +29,9 @@ use Illuminate\Database\Eloquent\Model;
 class Certificado extends Model
 {
 	protected $table = 'certificados';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'plantilla_id' => 'int',

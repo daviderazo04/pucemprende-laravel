@@ -27,11 +27,9 @@ use Illuminate\Database\Eloquent\Model;
 class ProcesosEvaluacion extends Model
 {
 	protected $table = 'procesos_evaluacion';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'evento_id' => 'int'

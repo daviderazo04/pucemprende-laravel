@@ -25,11 +25,9 @@ use Illuminate\Database\Eloquent\Model;
 class RolesProyecto extends Model
 {
 	protected $table = 'roles_proyectos';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime'
 	];

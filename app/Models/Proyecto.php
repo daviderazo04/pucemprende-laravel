@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon|null $fecha_fin
  * 
  * @property Equipo|null $equipo
+ * @property Collection|Archivo[] $archivos
  * @property Collection|MiembrosProyecto[] $miembros_proyectos
  *
  * @package App\Models
@@ -31,11 +32,9 @@ use Illuminate\Database\Eloquent\Model;
 class Proyecto extends Model
 {
 	protected $table = 'proyectos';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'equipo_id' => 'int',
@@ -57,6 +56,11 @@ class Proyecto extends Model
 	public function equipo()
 	{
 		return $this->belongsTo(Equipo::class);
+	}
+
+	public function archivos()
+	{
+		return $this->belongsToMany(Archivo::class);
 	}
 
 	public function miembros_proyectos()

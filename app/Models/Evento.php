@@ -28,22 +28,23 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $espacio
  * @property string|null $modalidad
  * 
+ * @property Collection|Archivo[] $archivos
  * @property Collection|Cronograma[] $cronogramas
+ * @property Collection|DocHabilitante[] $doc_habilitantes
  * @property Collection|Equipo[] $equipos
  * @property Collection|EquiposGanadore[] $equipos_ganadores
  * @property Collection|PersonasGanadora[] $personas_ganadoras
  * @property Collection|ProcesosEvaluacion[] $procesos_evaluacions
+ * @property Collection|Sede[] $sedes
  *
  * @package App\Models
  */
 class Evento extends Model
 {
 	protected $table = 'eventos';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'estado_borrado' => 'bool',
@@ -69,9 +70,24 @@ class Evento extends Model
 		'modalidad'
 	];
 
+	public function archivos()
+	{
+		return $this->belongsToMany(Archivo::class);
+	}
+
+	public function categoria()
+	{
+		return $this->hasMany(Categorium::class);
+	}
+
 	public function cronogramas()
 	{
 		return $this->hasMany(Cronograma::class);
+	}
+
+	public function doc_habilitantes()
+	{
+		return $this->hasMany(DocHabilitante::class);
 	}
 
 	public function equipos()
@@ -92,5 +108,10 @@ class Evento extends Model
 	public function procesos_evaluacions()
 	{
 		return $this->hasMany(ProcesosEvaluacion::class);
+	}
+
+	public function sedes()
+	{
+		return $this->hasMany(Sede::class);
 	}
 }

@@ -30,11 +30,9 @@ use Illuminate\Database\Eloquent\Model;
 class Cronograma extends Model
 {
 	protected $table = 'cronogramas';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'evento_id' => 'int',
 		'fecha_inicio' => 'datetime',
 		'fecha_fin' => 'datetime',

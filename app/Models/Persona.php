@@ -39,11 +39,9 @@ use Illuminate\Database\Eloquent\Model;
 class Persona extends Model
 {
 	protected $table = 'personas';
-	public $incrementing = true;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'estado_borrado' => 'bool',

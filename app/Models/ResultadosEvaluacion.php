@@ -31,11 +31,9 @@ use Illuminate\Database\Eloquent\Model;
 class ResultadosEvaluacion extends Model
 {
 	protected $table = 'resultados_evaluacion';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'equipo_id' => 'int',

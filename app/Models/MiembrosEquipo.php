@@ -28,11 +28,9 @@ use Illuminate\Database\Eloquent\Model;
 class MiembrosEquipo extends Model
 {
 	protected $table = 'miembros_equipo';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'equipo_id' => 'int',

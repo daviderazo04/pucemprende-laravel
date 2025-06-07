@@ -26,11 +26,9 @@ class Log extends Model
 {
 	protected $table = 'logs';
 	protected $primaryKey = 'log_id';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'log_id' => 'int',
 		'log_fecha_hora' => 'datetime'
 	];
 

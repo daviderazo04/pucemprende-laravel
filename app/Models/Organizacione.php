@@ -26,11 +26,9 @@ use Illuminate\Database\Eloquent\Model;
 class Organizacione extends Model
 {
 	protected $table = 'organizaciones';
-	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime'
 	];
