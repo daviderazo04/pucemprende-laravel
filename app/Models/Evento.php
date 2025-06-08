@@ -60,12 +60,12 @@ class Evento extends Model
 		'estado_borrado',
 		'borrado_en',
 		'nombre',
-		'categoria',
+		'categoria_id',
 		'descripcion',
 		'fecha_inicio',
 		'fecha_fin',
 		'capacidad',
-		'sede',
+		'sede_id',
 		'espacio',
 		'modalidad'
 	];

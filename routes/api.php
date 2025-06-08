@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\EventoController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -28,6 +29,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard', function () {
         return response()->json(['message' => 'Acceso permitido porque estás verificado']);
     })->middleware('verified');
+
+    // Rutas para el CRUD de eventos
+    // La lógica de protección por rol para 'store' está en el constructor de EventoController
+    Route::apiResource('eventos', EventoController::class);
 });
 
 /*Para probar en postman pero no funca xd 
