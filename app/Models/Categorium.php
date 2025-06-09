@@ -6,6 +6,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -13,9 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  * 
  * @property int $id
  * @property string $nombre
- * @property int $evento_id
  * 
- * @property Evento $evento
+ * @property Collection|Evento[] $eventos
  *
  * @package App\Models
  */
@@ -24,17 +24,12 @@ class Categorium extends Model
 	protected $table = 'categoria';
 	public $timestamps = false;
 
-	protected $casts = [
-		'evento_id' => 'int'
-	];
-
 	protected $fillable = [
-		'nombre',
-		'evento_id'
+		'nombre'
 	];
 
-	public function evento()
+	public function eventos()
 	{
-		return $this->belongsTo(Evento::class);
+		return $this->hasMany(Evento::class, 'categoria_id');
 	}
 }

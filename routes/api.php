@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\DocHabilitanteController;
+use App\Http\Controllers\SedeController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -36,6 +37,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('eventos', EventoController::class);
 
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
+
+    Route::apiResource('sede', SedeController::class);
 });
 
 /*Para probar en postman pero no funca xd 
