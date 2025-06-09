@@ -39,7 +39,7 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'usuario' => $request->usuario,
             'email' => $request->email,
-            'clave' => $request->clave, // La encriptación se maneja con el cast 'hashed' en el modelo User
+            'clave' => Hash::make($request->clave), // La encriptación se maneja con el cast 'hashed' en el modelo User
             'rol_id' => $request->rol_id,
             'estado' => $request->estado ?? 'Activo', // Asignar un valor por defecto si no se envía
         ]);

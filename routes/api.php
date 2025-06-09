@@ -33,6 +33,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
+
+    Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
 });
 
 /*Para probar en postman pero no funca xd 

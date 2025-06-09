@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
 
 /**
@@ -82,4 +83,5 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->role && $this->role->id === $roleId;
     }
+
 }

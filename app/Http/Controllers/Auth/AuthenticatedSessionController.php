@@ -13,24 +13,35 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
-        // Autentica al usuario
-        $request->authenticate();
+        // Validar los campos necesarios
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-        // Obtén el usuario autenticado
+        // Intentar autenticar con email y password
+        if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            return response()->json([
+                'message' => 'These credentials do not match our records.',
+                'errors' => ['email' => ['These credentials do not match our records.']]
+            ], 422);
+        }
+
+        // Usuario autenticado correctamente
         $user = Auth::user();
 
-        // Genera un token (Sanctum)
+        // Crear token con Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Retorna un JSON con el token y los datos del usuario
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
         ]);
     }
+
 
     /**
      * Destroy an authenticated session.
