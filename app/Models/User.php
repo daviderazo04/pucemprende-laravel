@@ -1,16 +1,14 @@
 <?php
 
-/**
- * Created by Reliese Model.
- */
-
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Laravel\Sanctum\HasApiTokens; // <--- ¡Asegúrate de que este USE esté presente!
-use Illuminate\Auth\Authenticatable as AuthenticatableTrait; // <--- Renombrado para evitar conflicto con la clase
+use Illuminate\Notifications\Notifiable;
+
 
 /**
  * Class User
@@ -28,18 +26,14 @@ use Illuminate\Auth\Authenticatable as AuthenticatableTrait; // <--- Renombrado 
  *
  * @property Role|null $role
  * @property Collection|Persona[] $personas
- *
- * @package App\Models
  */
-class User extends Model implements \Illuminate\Contracts\Auth\Authenticatable // <--- Implementa esta interfaz
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use AuthenticatableTrait, HasApiTokens; // <--- Usa estos traits
+    use HasApiTokens, Notifiable;
 
     protected $table = 'users';
     public $timestamps = false;
 
-    // Sobrescribimos este método para indicar a Laravel que tu columna de contraseña es 'clave'
-    // Esto es crucial para que el login y la autenticación funcionen correctamente con Sanctum.
     public function getAuthPassword()
     {
         return $this->clave;
@@ -54,7 +48,7 @@ class User extends Model implements \Illuminate\Contracts\Auth\Authenticatable /
 
     protected $hidden = [
         'remember_token',
-        'clave', // Oculta la columna 'clave' de las respuestas JSON por seguridad
+        'clave',
     ];
 
     protected $fillable = [
@@ -79,7 +73,6 @@ class User extends Model implements \Illuminate\Contracts\Auth\Authenticatable /
         return $this->hasMany(Persona::class, 'users_id');
     }
 
-    // Métodos helper para verificar roles por nombre o ID
     public function hasRole(string $roleName): bool
     {
         return $this->role && $this->role->nombre === $roleName;
