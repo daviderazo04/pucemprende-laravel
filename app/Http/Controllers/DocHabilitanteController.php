@@ -38,14 +38,14 @@ class DocHabilitanteController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:30',
             'formato' => 'required|string|max:6',
-            'evento_id' => 'nullable|integer|exists:evento,id',
+            'evento_id' => 'nullable|integer|exists:eventos,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $docHabilitante = Evento::create([
+        $docHabilitante = DocHabilitante::create([
             'nombre' => $request->nombre,
             'formato' => $request->formato,
             'evento_id' => $request->evento_id,
@@ -80,7 +80,7 @@ class DocHabilitanteController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:30',
             'formato' => 'required|string|max:6',
-            'evento_id' => 'nullable|integer|exists:evento,id',
+            'evento_id' => 'nullable|integer|exists:eventos,id',
         ]);
 
         if ($validator->fails()) {
