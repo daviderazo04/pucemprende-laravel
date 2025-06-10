@@ -14,6 +14,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EventoDocHabilitanteController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\MiembrosProyectoController;
+use App\Http\Controllers\RolesProyectoController;
 
 
 // Ruta protegida para obtener usuario logueado
@@ -60,6 +61,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas - Miembros de proyecto
     Route::apiResource('miembros-proyecto', MiembrosProyectoController::class);
+
+    // Rutas - Roles Proyecto
+    Route::apiResource('roles-proyecto', RolesProyectoController::class);
 
     //Tabla interseccion de evento-dochabilitante
     Route::get('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'show']);
