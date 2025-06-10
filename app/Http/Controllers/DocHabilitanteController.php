@@ -56,12 +56,19 @@ class DocHabilitanteController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, DocHabilitante $docHabilitante)
+    public function show(Request $request, $id)
     {
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
-        return response()->json($docHabilitante);
+        // Buscar la documento habilitante por id
+        $doc = DocHabilitante::find($id);
+
+        if (!$doc) {
+            return response()->json(['message' => 'Documento habilitante no encontrado'], 404);
+        }
+
+        return response()->json($doc);
     }
 
     /**

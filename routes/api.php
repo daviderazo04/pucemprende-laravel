@@ -7,6 +7,9 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\DocHabilitanteController;
 use App\Http\Controllers\SedeController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\EventoDocHabilitanteController;
+use App\Http\Controllers\ProyectoController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -39,14 +42,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
 
     Route::apiResource('sede', SedeController::class);
+    Route::apiResource('categoria', CategoriaController::class);
+    Route::apiResource('proyecto', ProyectoController::class);
+
+    //Tabla interseccion de evento-dochabilitante
+    Route::get('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'show']);
+    Route::put('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'update']);
+    Route::delete('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'destroy']);
+    Route::get('evento-dochabilitante', [EventoDocHabilitanteController::class, 'index']);
+    Route::post('evento-dochabilitante', [EventoDocHabilitanteController::class, 'store']);
+
 });
 
-/*Para probar en postman pero no funca xd 
-// Ruta a la que el usuario es redirigido al hacer clic en el enlace del email
-    Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
-        */
+
 
 // Incluye las rutas de autenticación como /api/register, /api/login, etc.
 require __DIR__.'/auth.php';
