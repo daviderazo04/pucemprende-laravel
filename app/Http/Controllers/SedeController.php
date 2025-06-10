@@ -2,26 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DocHabilitante;
+use App\Models\Sede;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 
-class DocHabilitanteController extends Controller
+class SedeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        //Solo los administradores pueden acceder a las sedes 
+        //(no tiene sentido que cualquier usuario las pueda ver porque solo sirven para asociar un proyecto con ellas)
+        
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
-        $docHabilitante = DocHabilitante::all();
-        return response()->json($docHabilitante);
+        $sede = Sede::all();
+        return response()->json($sede);
     }
 
     /**
@@ -32,85 +35,82 @@ class DocHabilitanteController extends Controller
         print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para añadir documentos habilitantes a un evento.'], 403);
+            return response()->json(['message' => 'No tienes permiso para añadir una nueva sede.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:30',
-            'formato' => 'required|string|max:6'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $docHabilitante = DocHabilitante::create([
+        $sede = Sede::create([
             'nombre' => $request->nombre,
-            'formato' => $request->formato
         ]);
 
-        return response()->json($docHabilitante, 201);
-
+        return response()->json($sede, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, DocHabilitante $docHabilitante)
+    public function show(Request $request, Sede $sede)
     {
+        //Solo admin puede ver las sedes
+
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
-        return response()->json($docHabilitante);
+        
+        return response()->json($sede);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DocHabilitante $docHabilitante)
+    public function update(Request $request, Sede $sede)
     {
         print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para editar documentos habilitantes a un evento.'], 403);
+            return response()->json(['message' => 'No tienes permiso para añadir una nueva sede.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:30',
-            'formato' => 'required|string|max:6'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $docHabilitante->fill($request->only([
-            'nombre',
-            'formato'
+        $sede->fill($request->only([
+            'nombre'
         ]));
         
-        $docHabilitante->save();
+        $sede->save();
 
-        return response()->json($docHabilitante);
+        return response()->json($sede);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DocHabilitante $docHabilitante)
+    public function destroy(Sede $sede)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
+         // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para eliminar documentos habilitantes.'], 403);
         }
 
         // Intenta eliminar el documento
         try {
-            $docHabilitante->delete();
-            return response()->json(['message' => 'Documento eliminado correctamente.']);
+            $sede->delete();
+            return response()->json(['message' => 'Sede eliminada correctamente.']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al eliminar el documento.', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al eliminar la sede.', 'error' => $e->getMessage()], 500);
         }
-
     }
 }

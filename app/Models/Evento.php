@@ -19,23 +19,25 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $estado_borrado
  * @property Carbon|null $borrado_en
  * @property string $nombre
- * @property string|null $categoria
  * @property string|null $descripcion
  * @property Carbon|null $fecha_inicio
  * @property Carbon|null $fecha_fin
  * @property int|null $capacidad
- * @property string|null $sede
  * @property string|null $espacio
  * @property string|null $modalidad
+ * @property int|null $sede_id
+ * @property int|null $categoria_id
+ * @property bool $hayEquipos
+ * @property bool $hayFormulario
  * 
+ * @property Categorium|null $categorium
  * @property Collection|Archivo[] $archivos
  * @property Collection|Cronograma[] $cronogramas
- * @property Collection|DocHabilitante[] $doc_habilitantes
  * @property Collection|Equipo[] $equipos
  * @property Collection|EquiposGanadore[] $equipos_ganadores
+ * @property Collection|EventoDochabilitante[] $evento_dochabilitantes
  * @property Collection|PersonasGanadora[] $personas_ganadoras
  * @property Collection|ProcesosEvaluacion[] $procesos_evaluacions
- * @property Collection|Sede[] $sedes
  *
  * @package App\Models
  */
@@ -51,7 +53,11 @@ class Evento extends Model
 		'borrado_en' => 'datetime',
 		'fecha_inicio' => 'datetime',
 		'fecha_fin' => 'datetime',
-		'capacidad' => 'int'
+		'capacidad' => 'int',
+		'sede_id' => 'int',
+		'categoria_id' => 'int',
+		'hayEquipos' => 'int',
+		'hayFormulario' => 'int'
 	];
 
 	protected $fillable = [
@@ -60,34 +66,31 @@ class Evento extends Model
 		'estado_borrado',
 		'borrado_en',
 		'nombre',
-		'categoria_id',
 		'descripcion',
 		'fecha_inicio',
 		'fecha_fin',
 		'capacidad',
-		'sede_id',
 		'espacio',
-		'modalidad'
+		'modalidad',
+		'sede_id',
+		'categoria_id',
+		'hayEquipos',
+		'hayFormulario'
 	];
+
+	public function categorium()
+	{
+		return $this->belongsTo(Categorium::class, 'categoria_id');
+	}
 
 	public function archivos()
 	{
 		return $this->belongsToMany(Archivo::class);
 	}
 
-	public function categoria()
-	{
-		return $this->hasMany(Categorium::class);
-	}
-
 	public function cronogramas()
 	{
 		return $this->hasMany(Cronograma::class);
-	}
-
-	public function doc_habilitantes()
-	{
-		return $this->hasMany(DocHabilitante::class);
 	}
 
 	public function equipos()
@@ -100,6 +103,11 @@ class Evento extends Model
 		return $this->hasMany(EquiposGanadore::class);
 	}
 
+	public function evento_dochabilitantes()
+	{
+		return $this->hasMany(EventoDochabilitante::class);
+	}
+
 	public function personas_ganadoras()
 	{
 		return $this->hasMany(PersonasGanadora::class);
@@ -108,10 +116,5 @@ class Evento extends Model
 	public function procesos_evaluacions()
 	{
 		return $this->hasMany(ProcesosEvaluacion::class);
-	}
-
-	public function sedes()
-	{
-		return $this->hasMany(Sede::class);
 	}
 }

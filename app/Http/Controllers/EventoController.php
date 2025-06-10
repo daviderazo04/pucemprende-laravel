@@ -42,6 +42,8 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'sede_id' => 'nullable|integer|exists:sede,id',
             'espacio' => 'nullable|string|max:255',
             'modalidad' => ['required', 'string', Rule::in(['En Línea', 'Presencial'])],
+            'hayEquipos' => 'nullable|int|min:0',
+            'hayFormulario' => 'nullable|int|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -62,6 +64,8 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'sede_id' => $request->sede_id,
             'espacio' => $request->espacio,
             'modalidad' => $request->modalidad,
+            'hayEquipos' => $request->hayEquipos,
+            'hayFormulario' => $request->hayFormulario,
         ]);
 
         return response()->json($evento, 201);
@@ -91,6 +95,8 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'modalidad' => ['nullable', 'string', Rule::in(['En Línea', 'Presencial'])],
             'estado_borrado' => 'nullable|boolean',
             'borrado_en' => 'nullable|date_format:Y-m-d H:i:s',
+            'hayEquipos' => 'nullable|int|min:0',
+            'hayFormulario' => 'nullable|int|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -108,7 +114,9 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'espacio',
             'modalidad',
             'estado_borrado',
-            'borrado_en'
+            'borrado_en',
+            'hayEquipos',
+            'hayFormulario'
         ]));
         $evento->actualizado_en = Carbon::now();
         $evento->save();

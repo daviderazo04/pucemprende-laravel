@@ -8,6 +8,7 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\AfiliacionController;
 use App\Http\Controllers\EquipoController;                  
 use App\Http\Controllers\DocHabilitanteController;
+use App\Http\Controllers\SedeController;
 
 
 // Ruta protegida para obtener usuario logueado
@@ -40,9 +41,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('eventos', EventoController::class);
 
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
+<<<<<<< HEAD
     
 
     
+=======
+
+    Route::apiResource('sede', SedeController::class);
+>>>>>>> e16977742821248e687d4df09176a5571ed816c4
 });
 
 /*Para probar en postman pero no funca xd 

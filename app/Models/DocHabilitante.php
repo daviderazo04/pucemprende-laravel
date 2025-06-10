@@ -6,6 +6,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -14,9 +15,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $nombre
  * @property string $formato
- * @property int $evento_id
  * 
- * @property Evento $evento
+ * @property Collection|EventoDochabilitante[] $evento_dochabilitantes
  *
  * @package App\Models
  */
@@ -25,18 +25,13 @@ class DocHabilitante extends Model
 	protected $table = 'doc_habilitantes';
 	public $timestamps = false;
 
-	protected $casts = [
-		'evento_id' => 'int'
-	];
-
 	protected $fillable = [
 		'nombre',
-		'formato',
-		'evento_id'
+		'formato'
 	];
 
-	public function evento()
+	public function evento_dochabilitantes()
 	{
-		return $this->belongsTo(Evento::class);
+		return $this->hasMany(EventoDochabilitante::class, 'dochab_id');
 	}
 }
