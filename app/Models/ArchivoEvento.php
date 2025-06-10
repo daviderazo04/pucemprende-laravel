@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class ArchivoEvento
  * 
+ * @property int $id
  * @property int $archivo_id
  * @property int $evento_id
  * 
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
 class ArchivoEvento extends Model
 {
 	protected $table = 'archivo_evento';
-	public $incrementing = false;
+	
 	public $timestamps = false;
 
 	protected $casts = [
