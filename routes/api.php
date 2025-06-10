@@ -44,14 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('eventos', EventoController::class);
 
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
-<<<<<<< HEAD
-    
-
-    
-=======
-
     Route::apiResource('sede', SedeController::class);
-<<<<<<< HEAD
     Route::apiResource('categoria', CategoriaController::class);
     Route::apiResource('proyecto', ProyectoController::class);
 
@@ -62,9 +55,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('evento-dochabilitante', [EventoDocHabilitanteController::class, 'index']);
     Route::post('evento-dochabilitante', [EventoDocHabilitanteController::class, 'store']);
 
-=======
->>>>>>> e16977742821248e687d4df09176a5571ed816c4
->>>>>>> 506205647660ace418b7628d3250b74abe808a86
 });
 
 
