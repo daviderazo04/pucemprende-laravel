@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\AfiliacionController;
+use App\Http\Controllers\OrganizacionController;
 use App\Http\Controllers\EquipoController;                  
 use App\Http\Controllers\DocHabilitanteController;
 use App\Http\Controllers\SedeController;
@@ -36,19 +37,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     })->middleware('verified');
     Route::apiResource('afiliaciones', AfiliacionController::class);
     Route::apiResource('equipos', EquipoController::class);
+    Route::apiResource('organizaciones', OrganizacionController::class);
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
 
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
-<<<<<<< HEAD
-    
-
-    
-=======
 
     Route::apiResource('sede', SedeController::class);
->>>>>>> e16977742821248e687d4df09176a5571ed816c4
+
 });
 
 /*Para probar en postman pero no funca xd 
