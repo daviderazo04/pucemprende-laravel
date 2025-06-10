@@ -37,7 +37,9 @@ class Equipo extends Model
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'evento_id' => 'int',
-		'ranking' => 'int'
+		'ranking' => 'int',
+		'estado_borrado' => 'bool',
+		'borrado_en' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -45,7 +47,9 @@ class Equipo extends Model
 		'actualizado_en',
 		'nombre',
 		'evento_id',
-		'ranking'
+		'ranking',
+		'estado_borrado',
+		'borrado_en'
 	];
 
 	public function evento()

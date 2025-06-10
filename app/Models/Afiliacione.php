@@ -33,7 +33,9 @@ class Afiliacione extends Model
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'persona_id' => 'int',
-		'organizacion_id' => 'int'
+		'organizacion_id' => 'int',
+		'estado_borrado' => 'bool',
+		'borrado_en' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -41,7 +43,9 @@ class Afiliacione extends Model
 		'actualizado_en',
 		'persona_id',
 		'organizacion_id',
-		'rol_interno'
+		'rol_interno',
+		'estado_borrado',
+		'borrado_en'
 	];
 
 	public function persona()

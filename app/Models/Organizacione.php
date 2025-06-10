@@ -30,14 +30,18 @@ class Organizacione extends Model
 
 	protected $casts = [
 		'creado_en' => 'datetime',
-		'actualizado_en' => 'datetime'
+		'actualizado_en' => 'datetime',
+		'estado_borrado' => 'bool',
+		'borrado_en' => 'datetime'
 	];
 
 	protected $fillable = [
 		'creado_en',
 		'actualizado_en',
 		'nombre',
-		'abreviatura'
+		'abreviatura',
+		'estado_borrado', 
+		'borrado_en' 
 	];
 
 	public function afiliaciones()
