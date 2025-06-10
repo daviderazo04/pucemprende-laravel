@@ -5,11 +5,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\EventoController;
+use App\Http\Controllers\AfiliacionController;
+use App\Http\Controllers\EquipoController;                  
 use App\Http\Controllers\DocHabilitanteController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EventoDocHabilitanteController;
 use App\Http\Controllers\ProyectoController;
+
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -34,14 +37,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard', function () {
         return response()->json(['message' => 'Acceso permitido porque estás verificado']);
     })->middleware('verified');
-
+    Route::apiResource('afiliaciones', AfiliacionController::class);
+    Route::apiResource('equipos', EquipoController::class);
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
 
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
+<<<<<<< HEAD
+    
+
+    
+=======
 
     Route::apiResource('sede', SedeController::class);
+<<<<<<< HEAD
     Route::apiResource('categoria', CategoriaController::class);
     Route::apiResource('proyecto', ProyectoController::class);
 
@@ -52,6 +62,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('evento-dochabilitante', [EventoDocHabilitanteController::class, 'index']);
     Route::post('evento-dochabilitante', [EventoDocHabilitanteController::class, 'store']);
 
+=======
+>>>>>>> e16977742821248e687d4df09176a5571ed816c4
+>>>>>>> 506205647660ace418b7628d3250b74abe808a86
 });
 
 
