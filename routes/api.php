@@ -13,6 +13,7 @@ use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EventoDocHabilitanteController;
 use App\Http\Controllers\ProyectoController;
+use App\Http\Controllers\MiembrosProyectoController;
 
 
 // Ruta protegida para obtener usuario logueado
@@ -45,10 +46,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
 
+    // Rutas - Documentos habilitates
     Route::apiResource('doc-habilitantes', DocHabilitanteController::class);
+
+    // Rutas - Sede
     Route::apiResource('sede', SedeController::class);
+
+    // Rutas - Categoría de evento
     Route::apiResource('categoria', CategoriaController::class);
+
+    // Rutas - Proyectos
     Route::apiResource('proyecto', ProyectoController::class);
+
+    // Rutas - Miembros de proyecto
+    Route::apiResource('miembros-proyecto', MiembrosProyectoController::class);
 
     //Tabla interseccion de evento-dochabilitante
     Route::get('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'show']);

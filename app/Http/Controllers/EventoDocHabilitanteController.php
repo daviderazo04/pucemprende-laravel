@@ -14,8 +14,12 @@ class EventoDocHabilitanteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->user()->rol_id !== 1) {
+            return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante con un evento.'], 403);
+        }
+        
         $eventosDocHabilitante = EventoDocHabilitante::all();
         return response()->json($eventosDocHabilitante);
     }
@@ -25,7 +29,7 @@ class EventoDocHabilitanteController extends Controller
      */
     public function store(Request $request)
     {
-         print($request->user());
+        //print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante con un evento.'], 403);

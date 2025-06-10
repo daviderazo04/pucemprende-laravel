@@ -25,7 +25,7 @@ class ProyectoController extends Controller
      */
     public function store(Request $request)
     {
-        print($request->user());
+        //print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para crear eventos.'], 403);
