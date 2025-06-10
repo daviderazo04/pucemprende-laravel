@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
 class EventoDochabilitante extends Model
 {
 	protected $table = 'evento_dochabilitante';
-	public $incrementing = false;
+	
 	public $timestamps = false;
 
 	// Definir los campos que se pueden asignar masivamente
