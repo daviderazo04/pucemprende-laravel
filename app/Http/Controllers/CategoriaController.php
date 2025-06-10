@@ -2,29 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Sede;
+use App\Models\Categorium;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 
-class SedeController extends Controller
+class CategoriaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        //Solo los administradores pueden acceder a las sedes 
+        //Solo los administradores pueden acceder a las categorias de eventos 
         //(no tiene sentido que cualquier usuario las pueda ver porque solo sirven para asociar un proyecto con ellas)
         
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
-        $sede = Sede::all();
-        return response()->json($sede);
+        $categoria = Categorium::all();
+        return response()->json($categoria);
     }
 
     /**
@@ -35,22 +35,22 @@ class SedeController extends Controller
         print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para añadir una nueva sede.'], 403);
+            return response()->json(['message' => 'No tienes permiso para añadir una nueva categoría.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:30',
+            'nombre' => 'required|string|max:60',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $sede = Sede::create([
+        $categoria = Categorium::create([
             'nombre' => $request->nombre,
         ]);
 
-        return response()->json($sede, 201);
+        return response()->json($categoria, 201);
     }
 
     /**
@@ -58,31 +58,30 @@ class SedeController extends Controller
      */
     public function show(Request $request, $id)
     {
-        //Solo admin puede ver las sedes
-
+        // Solo admin puede ver las categorias
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
-        
-        // Buscar la sede por id
-        $sede = Sede::find($id);
 
-        if (!$sede) {
-            return response()->json(['message' => 'Sede no encontrada'], 404);
+        // Buscar la categoría por id
+        $categoria = Categorium::find($id);
+
+        if (!$categoria) {
+            return response()->json(['message' => 'Categoría no encontrada'], 404);
         }
 
-        return response()->json($sede);
+        return response()->json($categoria);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Sede $sede)
+    public function update(Request $request, Categorium $categorium)
     {
         print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para editar una sede.'], 403);
+            return response()->json(['message' => 'No tienes permiso para editar una categoria.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -93,31 +92,31 @@ class SedeController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $sede->fill($request->only([
+        $categorium->fill($request->only([
             'nombre'
         ]));
         
-        $sede->save();
+        $categorium->save();
 
-        return response()->json($sede);
+        return response()->json($categorium);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Sede $sede)
+    public function destroy(Categorium $categorium)
     {
-         // Solo permitir si el usuario tiene rol_id = 1
+        // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para eliminar una sede.'], 403);
+            return response()->json(['message' => 'No tienes permiso para eliminar una categoría.'], 403);
         }
 
         // Intenta eliminar el documento
         try {
-            $sede->delete();
-            return response()->json(['message' => 'Sede eliminada correctamente.']);
+            $categorium->delete();
+            return response()->json(['message' => 'Categoría eliminada correctamente.']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al eliminar la sede.', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al eliminar la categoría.', 'error' => $e->getMessage()], 500);
         }
     }
 }

@@ -25,6 +25,12 @@ class EventoDochabilitante extends Model
 	public $incrementing = false;
 	public $timestamps = false;
 
+	// Definir los campos que se pueden asignar masivamente
+    protected $fillable = [
+        'evento_id', // Permite la asignación masiva de evento_id
+        'dochab_id', // Permite la asignación masiva de dochab_id
+    ];
+
 	protected $casts = [
 		'evento_id' => 'int',
 		'dochab_id' => 'int'
