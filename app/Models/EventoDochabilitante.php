@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class EventoDochabilitante
  * 
+ * @property int $id
  * @property int $evento_id
  * @property int $dochab_id
  * 
