@@ -34,16 +34,14 @@ class PlantillasEvaluacion extends Model
 	protected $casts = [
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
-		'proceso_id' => 'int',
-		'peso' => 'float'
+		'proceso_id' => 'int'
 	];
 
 	protected $fillable = [
 		'creado_en',
 		'actualizado_en',
 		'proceso_id',
-		'nombre',
-		'peso'
+		'nombre'
 	];
 
 	public function procesos_evaluacion()
