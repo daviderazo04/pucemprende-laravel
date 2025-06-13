@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evento;
+use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -26,10 +27,14 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
     public function store(Request $request)
     {
-        print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para crear eventos.'], 403);
+        }
+
+        $persona = Persona::where('users_id', auth()->id())->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -43,7 +48,7 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'espacio' => 'nullable|string|max:255',
             'modalidad' => ['required', 'string', Rule::in(['En Línea', 'Presencial'])],
             'hayEquipos' => 'nullable|int|min:0',
-            'hayFormulario' => 'nullable|int|min:0',
+            'hayFormulario' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -55,6 +60,7 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'actualizado_en' => Carbon::now(),
             'estado_borrado' => false,
             'borrado_en' => null,
+            'autor' => $persona->id, // <-- SOLO este
             'nombre' => $request->nombre,
             'categoria_id' => $request->categoria_id,
             'descripcion' => $request->descripcion,
@@ -78,11 +84,16 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
     public function update(Request $request, Evento $evento)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para actualizar eventos.'], 403);
         }
 
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        // Comparar correctamente: id de persona autenticada vs autor del evento
+        if (!$persona || $evento->autor != $persona->id) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
+        }
         $validator = Validator::make($request->all(), [
             'nombre' => 'sometimes|required|string|max:255',
             'categoria_id' => 'nullable|integer|exists:categoria,id',
@@ -96,7 +107,7 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'estado_borrado' => 'nullable|boolean',
             'borrado_en' => 'nullable|date_format:Y-m-d H:i:s',
             'hayEquipos' => 'nullable|int|min:0',
-            'hayFormulario' => 'nullable|int|min:0',
+            'hayFormulario' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -126,9 +137,15 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
     public function destroy(Evento $evento)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para eliminar eventos.'], 403);
+        }
+
+        $persona = Persona::where('users_id', request()->user()->id)->first();
+
+        // Comparar correctamente: id de persona autenticada vs autor del evento
+        if (!$persona || $evento->autor != $persona->id) {
+            return response()->json(['message' => 'No tienes permiso para eliminar este evento.'], 403);
         }
 
         $evento->estado_borrado = true;

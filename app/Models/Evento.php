@@ -57,12 +57,13 @@ class Evento extends Model
 		'sede_id' => 'int',
 		'categoria_id' => 'int',
 		'hayEquipos' => 'int',
-		'hayFormulario' => 'int'
+		'hayFormulario' => 'bool'
 	];
 
 	protected $fillable = [
 		'creado_en',
 		'actualizado_en',
+		'autor',
 		'estado_borrado',
 		'borrado_en',
 		'nombre',
@@ -78,6 +79,10 @@ class Evento extends Model
 		'hayFormulario'
 	];
 
+	public function autor()
+    {
+        return $this->belongsTo(Persona::class, 'autor');
+    }
 	public function categorium()
 	{
 		return $this->belongsTo(Categorium::class, 'categoria_id');
