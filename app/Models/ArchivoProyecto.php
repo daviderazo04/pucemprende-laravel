@@ -25,7 +25,10 @@ class ArchivoProyecto extends Model
 	protected $table = 'archivo_proyecto';
 	
 	public $timestamps = false;
-
+	protected $fillable = [
+        'archivo_id',
+        'proyecto_id',
+    ];
 	protected $casts = [
 		'archivo_id' => 'int',
 		'proyecto_id' => 'int'

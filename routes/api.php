@@ -14,8 +14,12 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EventoDocHabilitanteController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\MiembrosProyectoController;
+use App\Http\Controllers\MiembrosEquipoController;
 use App\Http\Controllers\RolesProyectoController;
-
+use App\Http\Controllers\ArchivoController;
+use App\Http\Controllers\ArchivoProyectoController;
+use App\Http\Controllers\ArchivoEventoController;
+use App\Http\Controllers\EquiposGanadoreController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -40,9 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard', function () {
         return response()->json(['message' => 'Acceso permitido porque estás verificado']);
     })->middleware('verified');
-    Route::apiResource('afiliaciones', AfiliacionController::class);
-    Route::apiResource('equipos', EquipoController::class);
-    Route::apiResource('organizaciones', OrganizacionController::class);
+    
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
@@ -64,6 +66,30 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas - Roles Proyecto
     Route::apiResource('roles-proyecto', RolesProyectoController::class);
+
+    // Rutas - Archivos
+    Route::apiResource('archivos', ArchivoController::class);
+
+    // Rutas - Archivos de Proyecto
+    Route::apiResource('archivos-proyecto', ArchivoProyectoController::class);
+
+    // Rutas - Archivos de Evento
+    Route::apiResource('archivos-evento', ArchivoEventoController::class);
+
+    // Rutas - Organizaciones
+    Route::apiResource('organizaciones', OrganizacionController::class);
+
+    // Rutas - Afiliaciones
+    Route::apiResource('afiliaciones', AfiliacionController::class);
+
+    // Rutas - Equipos
+    Route::apiResource('equipos', EquipoController::class);
+
+    //Rutas - Miembros de equipo
+    Route::apiResource('miembros-equipo', MiembrosEquipoController::class);
+
+    //Rutas - Equipos Ganadores
+    Route::apiResource('equipos-ganadores', EquiposGanadoreController::class);
 
     //Tabla interseccion de evento-dochabilitante
     Route::get('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'show']);

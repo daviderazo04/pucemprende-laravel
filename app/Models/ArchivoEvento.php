@@ -25,7 +25,10 @@ class ArchivoEvento extends Model
 	protected $table = 'archivo_evento';
 	
 	public $timestamps = false;
-
+	protected $fillable = [
+        'archivo_id',
+        'evento_id',
+    ];
 	protected $casts = [
 		'archivo_id' => 'int',
 		'evento_id' => 'int'
