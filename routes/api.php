@@ -104,6 +104,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('evento-dochabilitante', [EventoDocHabilitanteController::class, 'store']);
     Route::get('cronogramas/{cronograma}/actividades', [ActividadesCronogramaController::class, 'index']);
 
+    Route::apiResource('procesos-evaluacion', App\Http\Controllers\Api\ProcesosEvaluacionController::class);
+    Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
+    Route::apiResource('criterios', App\Http\Controllers\Api\CriterioController::class);
+
 });
 
 
