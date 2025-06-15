@@ -16,6 +16,9 @@ use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\MiembrosProyectoController;
 use App\Http\Controllers\MiembrosEquipoController;
 use App\Http\Controllers\RolesProyectoController;
+use App\Http\Controllers\CronogramaController;
+use App\Http\Controllers\ActividadesCronogramaController;
+
 
 
 // Ruta protegida para obtener usuario logueado
