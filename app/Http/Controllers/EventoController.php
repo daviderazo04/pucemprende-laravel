@@ -46,7 +46,7 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'capacidad' => 'nullable|integer|min:1',
             'sede_id' => 'nullable|integer|exists:sede,id',
             'espacio' => 'nullable|string|max:255',
-            'modalidad' => ['required', 'string', Rule::in(['En Línea', 'Presencial'])],
+            'modalidad' => ['required', 'string'],
             'hayEquipos' => 'nullable|int|min:0',
             'hayFormulario' => 'nullable|boolean',
         ]);
