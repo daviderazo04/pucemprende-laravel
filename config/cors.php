@@ -15,14 +15,11 @@ return [
     |
     */
 
-    'paths' => ['*'],
+     'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000',
-    'https://pucemprende.netlify.app',],
-
-    'allowed_origins_patterns' => [],
+    'allowed_origins' => ['http://127.0.0.1:3000'],
 
     'allowed_headers' => ['*'],
 

@@ -7,7 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\AfiliacionController;
 use App\Http\Controllers\OrganizacionController;
-use App\Http\Controllers\EquipoController;                  
+use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\DocHabilitanteController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\CategoriaController;
@@ -18,8 +18,10 @@ use App\Http\Controllers\MiembrosEquipoController;
 use App\Http\Controllers\RolesProyectoController;
 use App\Http\Controllers\CronogramaController;
 use App\Http\Controllers\ActividadesCronogramaController;
-
-
+use App\Http\Controllers\ArchivoController;
+use App\Http\Controllers\ArchivoEventoController;
+use App\Http\Controllers\ArchivoProyectoController;
+use App\Http\Controllers\EquiposGanadoreController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -33,7 +35,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
-        
+
 
     // Ruta para reenviar el email de verificación
     Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
@@ -44,7 +46,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard', function () {
         return response()->json(['message' => 'Acceso permitido porque estás verificado']);
     })->middleware('verified');
-    
+
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
