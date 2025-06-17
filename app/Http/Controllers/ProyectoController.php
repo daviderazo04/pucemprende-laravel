@@ -63,13 +63,7 @@ class ProyectoController extends Controller
      */
     public function show(Request $request, $id)
     {
-        //Solo admin puede ver las sedes
-
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
-        }
-        
-        // Buscar la sede por id
+        // Buscar proyecto por id
         $proyecto = Proyecto::find($id);
 
         if (!$proyecto) {
