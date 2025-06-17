@@ -26,7 +26,6 @@ use App\Http\Controllers\EquiposGanadoreController;
 use App\Http\Controllers\PersonasGanadorasController;
 use App\Http\Controllers\RolesController;
 
-=======
 use App\Http\Controllers\EquipoProyectoController;
 
 // Ruta protegida para obtener usuario logueado
