@@ -40,6 +40,7 @@ class ArchivoController extends Controller
             'url' => $request->url,
             'tipo' => $request->tipo
         ]);
+        return response()->json($archivo->id, 201);
     }
 
     /**
