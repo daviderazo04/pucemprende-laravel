@@ -44,7 +44,7 @@ class OrganizacionController extends Controller
             'abreviatura' => $request->abreviatura
         ]);
 
-        return response()->json($organizacion, 201);
+        return response()->json($organizacion->id, 201);
     }
 
     /**

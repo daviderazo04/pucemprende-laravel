@@ -22,8 +22,12 @@ use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\ArchivoEventoController;
 use App\Http\Controllers\ArchivoProyectoController;
 use App\Http\Controllers\EquiposGanadoreController;
+
 use App\Http\Controllers\PersonasGanadorasController;
 use App\Http\Controllers\RolesController;
+
+=======
+use App\Http\Controllers\EquipoProyectoController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -114,6 +118,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('evento-dochabilitante', [EventoDocHabilitanteController::class, 'index']);
     Route::post('evento-dochabilitante', [EventoDocHabilitanteController::class, 'store']);
     Route::get('cronogramas/{cronograma}/actividades', [ActividadesCronogramaController::class, 'index']);
+
+    // Rutas (sp) crear equipo y proyecto
+    Route::post('equipo-proyecto', [EquipoProyectoController::class, 'store']);
 
     Route::apiResource('procesos-evaluacion', App\Http\Controllers\Api\ProcesosEvaluacionController::class);
     Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
