@@ -32,7 +32,7 @@ class ProyectoController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'equipo_id' => 'nullable|integer|exists:equipos,id',
+            'equipo_id' => 'nullableY|integer|exists:equipos,id',
             'titulo' => 'required|string|max:50',
             'descripcion' => 'required|string|max:1000',
             'estado' => 'required|string|max:20',
