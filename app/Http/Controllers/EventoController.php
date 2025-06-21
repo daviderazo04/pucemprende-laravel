@@ -8,20 +8,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
-use App\Http\Controllers\Controller; // <-- ASEGÚRATE DE QUE ESTA LÍNEA EXISTA
 
-class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Controller
+class EventoController extends Controller
 {
     public function __construct()
     {
-        // La línea 16 de tu stack trace se refiere a la primera llamada a ->middleware()
         $this->middleware('auth:sanctum');
-        //$this->middleware('checkrole:1')->only(['store', 'update', 'destroy']); // Solo admins (rol_id 1) pueden crear
     }
 
     public function index()
     {
-        $eventos = Evento::all();
+        $eventos = Evento::with('categorium')->get()->map(function ($evento) {
+            $eventoArray = $evento->toArray();
+            $eventoArray['categoria'] = $evento->categorium ? $evento->categorium->nombre : null;
+            unset($eventoArray['categoria_id'], $eventoArray['categorium']);
+            return $eventoArray;
+        });
         return response()->json($eventos);
     }
 
@@ -39,16 +41,18 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
-            'categoria_id' => 'nullable|integer|exists:categoria,id',
             'descripcion' => 'nullable|string',
-            'fecha_inicio' => 'required|date_format:Y-m-d',
-            'fecha_fin' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
             'capacidad' => 'nullable|integer|min:1',
-            'sede_id' => 'nullable|integer|exists:sede,id',
-            'espacio' => 'nullable|string|max:255',
-            'modalidad' => ['required', 'string'],
-            'hayEquipos' => 'nullable|int|min:0',
+            'espacio' => 'nullable|string|max:30',
+            'modalidad' => 'required|string|max:10',
+            'sede_id' => 'nullable|integer',
+            'categoria_id' => 'nullable|integer',
+            'hayEquipos' => 'nullable|integer|min:0',
             'hayFormulario' => 'nullable|boolean',
+            'estado' => 'required|string|max:8',
+            'inscripcionesAbiertas' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -60,18 +64,19 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
             'actualizado_en' => Carbon::now(),
             'estado_borrado' => false,
             'borrado_en' => null,
-            'autor' => $persona->id, // <-- SOLO este
             'nombre' => $request->nombre,
-            'categoria_id' => $request->categoria_id,
             'descripcion' => $request->descripcion,
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_fin' => $request->fecha_fin,
             'capacidad' => $request->capacidad,
-            'sede_id' => $request->sede_id,
             'espacio' => $request->espacio,
             'modalidad' => $request->modalidad,
-            'hayEquipos' => $request->hayEquipos,
-            'hayFormulario' => $request->hayFormulario,
+            'sede_id' => $request->sede_id,
+            'categoria_id' => $request->categoria_id,
+            'hayEquipos' => $request->hayEquipos ?? 0,
+            'hayFormulario' => $request->hayFormulario ?? 0,
+            'estado' => $request->estado,
+            'inscripcionesAbiertas' => $request->inscripcionesAbiertas ?? 0,
         ]);
 
         return response()->json($evento, 201);
@@ -79,7 +84,11 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
     public function show(Evento $evento)
     {
-        return response()->json($evento);
+        $evento->load('categorium');
+        $eventoArray = $evento->toArray();
+        $eventoArray['categoria'] = $evento->categorium ? $evento->categorium->nombre : null;
+        unset($eventoArray['categoria_id'], $eventoArray['categorium']);
+        return response()->json($eventoArray);
     }
 
     public function update(Request $request, Evento $evento)
@@ -90,24 +99,26 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
         $persona = Persona::where('users_id', $request->user()->id)->first();
 
-        // Comparar correctamente: id de persona autenticada vs autor del evento
-        if (!$persona || $evento->autor != $persona->id) {
+        if (!$persona /*|| $evento->autor != $persona->id*/) {
             return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
         }
+
         $validator = Validator::make($request->all(), [
             'nombre' => 'sometimes|required|string|max:255',
-            'categoria_id' => 'nullable|integer|exists:categoria,id',
             'descripcion' => 'nullable|string',
-            'fecha_inicio' => 'nullable|date_format:Y-m-d',
-            'fecha_fin' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_inicio',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
             'capacidad' => 'nullable|integer|min:1',
-            'sede_id' => 'nullable|integer|exists:sede,id',
-            'espacio' => 'nullable|string|max:255',
-            'modalidad' => ['nullable', 'string', Rule::in(['En Línea', 'Presencial'])],
-            'estado_borrado' => 'nullable|boolean',
-            'borrado_en' => 'nullable|date_format:Y-m-d H:i:s',
-            'hayEquipos' => 'nullable|int|min:0',
+            'espacio' => 'nullable|string|max:30',
+            'modalidad' => 'nullable|string|max:10',
+            'sede_id' => 'nullable|integer',
+            'categoria_id' => 'nullable|integer',
+            'hayEquipos' => 'nullable|integer|min:0',
             'hayFormulario' => 'nullable|boolean',
+            'estado' => 'nullable|string|max:8',
+            'inscripcionesAbiertas' => 'nullable|boolean',
+            'estado_borrado' => 'nullable|boolean',
+            'borrado_en' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -116,18 +127,20 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
         $evento->fill($request->only([
             'nombre',
-            'categoria_id',
             'descripcion',
             'fecha_inicio',
             'fecha_fin',
             'capacidad',
-            'sede_id',
             'espacio',
             'modalidad',
+            'sede_id',
+            'categoria_id',
+            'hayEquipos',
+            'hayFormulario',
+            'estado',
+            'inscripcionesAbiertas',
             'estado_borrado',
             'borrado_en',
-            'hayEquipos',
-            'hayFormulario'
         ]));
         $evento->actualizado_en = Carbon::now();
         $evento->save();
@@ -143,8 +156,7 @@ class EventoController extends Controller // <-- ASEGÚRATE DE QUE EXTIENDA Cont
 
         $persona = Persona::where('users_id', request()->user()->id)->first();
 
-        // Comparar correctamente: id de persona autenticada vs autor del evento
-        if (!$persona || $evento->autor != $persona->id) {
+        if (!$persona /*|| $evento->autor != $persona->id*/) {
             return response()->json(['message' => 'No tienes permiso para eliminar este evento.'], 403);
         }
 

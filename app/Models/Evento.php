@@ -44,28 +44,16 @@ use Illuminate\Database\Eloquent\Model;
 class Evento extends Model
 {
 	protected $table = 'eventos';
-	public $timestamps = false;
 
-	protected $casts = [
-		'creado_en' => 'datetime',
-		'actualizado_en' => 'datetime',
-		'estado_borrado' => 'bool',
-		'borrado_en' => 'datetime',
-		'fecha_inicio' => 'datetime',
-		'fecha_fin' => 'datetime',
-		'capacidad' => 'int',
-		'sede_id' => 'int',
-		'categoria_id' => 'int',
-		'hayEquipos' => 'int',
-		'hayFormulario' => 'bool'
-	];
+	protected $primaryKey = 'id';
+
+	public $incrementing = true;
+
+	protected $keyType = 'int';
+
+	public $timestamps = false; // Usamos campos personalizados
 
 	protected $fillable = [
-		'creado_en',
-		'actualizado_en',
-		'autor',
-		'estado_borrado',
-		'borrado_en',
 		'nombre',
 		'descripcion',
 		'fecha_inicio',
@@ -76,7 +64,29 @@ class Evento extends Model
 		'sede_id',
 		'categoria_id',
 		'hayEquipos',
-		'hayFormulario'
+		'hayFormulario',
+		'estado',
+		'inscripcionesAbiertas',
+		'estado_borrado',
+		'borrado_en',
+		'creado_en',
+		'actualizado_en',
+	];
+
+	protected $casts = [
+		'id' => 'integer',
+		'creado_en' => 'datetime',
+		'actualizado_en' => 'datetime',
+		'estado_borrado' => 'boolean',
+		'borrado_en' => 'datetime',
+		'fecha_inicio' => 'datetime',
+		'fecha_fin' => 'datetime',
+		'capacidad' => 'integer',
+		'sede_id' => 'integer',
+		'categoria_id' => 'integer',
+		'hayEquipos' => 'integer',
+		'hayFormulario' => 'boolean',
+		'inscripcionesAbiertas' => 'boolean',
 	];
 
 	public function autor()

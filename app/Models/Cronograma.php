@@ -29,16 +29,15 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Cronograma extends Model
 {
-	protected $table = 'cronogramas';
-	public $timestamps = false;
+	protected $table = 'cronograma';
 
-	protected $casts = [
-		'evento_id' => 'int',
-		'fecha_inicio' => 'datetime',
-		'fecha_fin' => 'datetime',
-		'creado_en' => 'datetime',
-		'actualizado_en' => 'datetime'
-	];
+	protected $primaryKey = 'id';
+
+	public $incrementing = true;
+
+	protected $keyType = 'int';
+
+	public $timestamps = false; // Usamos campos personalizados
 
 	protected $fillable = [
 		'evento_id',
@@ -47,7 +46,16 @@ class Cronograma extends Model
 		'fecha_inicio',
 		'fecha_fin',
 		'creado_en',
-		'actualizado_en'
+		'actualizado_en',
+	];
+
+	protected $casts = [
+		'id' => 'integer',
+		'evento_id' => 'integer',
+		'fecha_inicio' => 'datetime',
+		'fecha_fin' => 'datetime',
+		'creado_en' => 'datetime',
+		'actualizado_en' => 'datetime',
 	];
 
 	public function evento()

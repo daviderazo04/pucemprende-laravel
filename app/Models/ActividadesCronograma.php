@@ -36,11 +36,12 @@ class ActividadesCronograma extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'cronograma_id' => 'int',
+		'id' => 'integer',
+		'cronograma_id' => 'integer',
 		'fecha_inicio' => 'datetime',
 		'fecha_fin' => 'datetime',
-		'orden' => 'int',
-		'dependencia_id' => 'int',
+		'orden' => 'integer',
+		'dependencia_id' => 'integer',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime'
 	];
@@ -62,12 +63,12 @@ class ActividadesCronograma extends Model
 		return $this->belongsTo(Cronograma::class);
 	}
 
-	public function actividades_cronograma()
+	public function dependencia()
 	{
 		return $this->belongsTo(ActividadesCronograma::class, 'dependencia_id');
 	}
 
-	public function actividades_cronogramas()
+	public function dependientes()
 	{
 		return $this->hasMany(ActividadesCronograma::class, 'dependencia_id');
 	}
