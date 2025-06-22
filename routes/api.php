@@ -84,6 +84,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas - Archivos
     Route::apiResource('archivos', ArchivoController::class);
 
+    // Rutas - Archivos subir archivo
+    Route::post('/upload-file', [ArchivoController::class, 'storeFile']);
+
     // Rutas - Archivos de Proyecto
     Route::apiResource('archivos-proyecto', ArchivoProyectoController::class);
 

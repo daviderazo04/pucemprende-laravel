@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Archivo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 class ArchivoController extends Controller
 {
     /**
@@ -15,6 +16,77 @@ class ArchivoController extends Controller
     {
         $archivo = Archivo::all();
         return response()->json($archivo);
+    }
+    /**
+     * Handles file storage from frontend.
+     * Stores the file and its URL in the database.
+     */
+    public function storeFile(Request $request)
+    {
+        // Storage::disk('public')->put("texto.txt", "Hola");
+
+        // if($req -> isMethod('POST')){
+        //     $file = $req->file('file');
+        //     $name = $req->input('name');
+        //     $file -> storeAs('',$name.".".$file -> extension(),'public');
+        // }
+        // Validate the incoming file
+        $request->validate([
+            'file' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // Max 10MB (10240 KB)
+            'name' => 'sometimes|string|max:255',
+            'tipo' => 'required|string|max:50',
+        ]);
+
+        if ($request->hasFile('file')) {
+            $uploadedFile = $request->file('file');
+
+            // Generate a unique file name using UUID and its original extension
+            $originalExtension = $uploadedFile->getClientOriginalExtension();
+            $fileName = Str::uuid() . '.' . $originalExtension;
+
+            try {
+                // Store the file in the 'uploads' directory within the 'public' disk
+                // This means it will be saved in storage/app/public/uploads/
+                $path = Storage::disk('public')->putFileAs('uploads', $uploadedFile, $fileName);
+
+                // Construct the public URL for the file
+                // This assumes you have run `php artisan storage:link`
+                $publicUrl = asset('storage/' . $path);
+
+                // Save the file information to your 'archivos' table
+                $archivo = Archivo::create([
+                    'creado_en' => now(),
+                    'actualizado_en' => now(),
+                    'estado_borrado' => false,
+                    'borrado_en' => null,
+                    'url' => $publicUrl, // Store the public URL
+                    'tipo' => $request->tipo, // Store the file type (e.g., 'cover', 'additional')
+                ]);
+
+                return response()->json([
+                    'message' => 'File uploaded and record created successfully!',
+                    'file' => [
+                        'id' => $archivo->id,
+                        'original_name' => $uploadedFile->getClientOriginalName(),
+                        'stored_name' => $fileName,
+                        'path' => $path,
+                        'url' => $publicUrl,
+                        'tipo' => $archivo->tipo,
+                    ]
+                ], 201); // 201 Created
+
+            } catch (\Exception $e) {
+                // Log the error for debugging
+                return response()->json([
+                    'message' => 'Error uploading file.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+        }
+
+        return response()->json([
+            'message' => 'No file found in the request.'
+        ], 400); // Bad Request
     }
 
     /**
