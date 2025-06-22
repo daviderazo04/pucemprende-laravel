@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Cronograma extends Model
 {
-	protected $table = 'cronograma';
+	protected $table = 'cronogramas';
 
 	protected $primaryKey = 'id';
 
