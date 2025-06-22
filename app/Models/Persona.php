@@ -94,4 +94,9 @@ class Persona extends Model
 	{
 		return $this->hasMany(ResultadosEvaluacion::class, 'evaluador_id');
 	}
+	
+	public function eventos_rol_persona()
+	{
+		return $this->hasMany(EventoRolPersona::class, 'persona_id');
+	}
 }

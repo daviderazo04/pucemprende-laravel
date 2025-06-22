@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Afiliacione;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 class AfiliacionController extends Controller
 {
     /**
@@ -21,15 +22,15 @@ class AfiliacionController extends Controller
      */
     public function store(Request $request)
     {
-         print($request->user());
+        
         // Solo permitir si el usuario tiene rol_id = 1
         if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para crear afiliaciones.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'persona_id' => 'nullable|integer|exists:persona,id',
-            'organizacion_id' => 'nullable|integer|exists:organizacion,id',
+            'persona_id' => 'nullable|integer|exists:personas,id',
+            'organizacion_id' => 'nullable|integer|exists:organizaciones,id',
             'rol_interno' => 'nullable|string|max:20'
         ]);
 
@@ -37,7 +38,7 @@ class AfiliacionController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $evento = Evento::create([
+        $afiliaciones = Afiliacione::create([
             'creado_en' => Carbon::now(),
             'actualizado_en' => Carbon::now(),
             'estado_borrado' => false,
@@ -47,7 +48,7 @@ class AfiliacionController extends Controller
             'rol_interno' => $request->rol_interno,
         ]);
 
-        return response()->json($evento, 201);
+        return response()->json($afiliaciones->id, 201);
     }
 
     /**
@@ -67,8 +68,8 @@ class AfiliacionController extends Controller
             return response()->json(['message' => 'No tienes los permisos suficientes'], 403);
         }
          $validator = Validator::make($request->all(), [
-            'persona_id' => 'nullable|integer|exists:persona,id',
-            'organizacion_id' => 'nullable|integer|exists:organizacion,id',
+            'persona_id' => 'nullable|integer|exists:personas,id',
+            'organizacion_id' => 'nullable|integer|exists:organizaciones,id',
             'rol_interno' => 'nullable|string|max:20',
             'estado_borrado' => 'nullable|boolean',
         ]);

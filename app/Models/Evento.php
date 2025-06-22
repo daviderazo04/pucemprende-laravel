@@ -132,4 +132,9 @@ class Evento extends Model
 	{
 		return $this->hasMany(ProcesosEvaluacion::class);
 	}
+
+	public function evento_rol_persona()
+	{
+		return $this->hasMany(EventoRolPersona::class, 'evento_id');
+	}
 }

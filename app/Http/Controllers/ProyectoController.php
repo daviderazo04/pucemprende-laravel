@@ -32,7 +32,7 @@ class ProyectoController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'equipo_id' => 'required|integer|exists:equipos,id',
+            'equipo_id' => 'nullableY|integer|exists:equipos,id',
             'titulo' => 'required|string|max:50',
             'descripcion' => 'required|string|max:1000',
             'estado' => 'required|string|max:20',
@@ -63,13 +63,7 @@ class ProyectoController extends Controller
      */
     public function show(Request $request, $id)
     {
-        //Solo admin puede ver las sedes
-
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
-        }
-        
-        // Buscar la sede por id
+        // Buscar proyecto por id
         $proyecto = Proyecto::find($id);
 
         if (!$proyecto) {
