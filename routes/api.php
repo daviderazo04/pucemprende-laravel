@@ -56,6 +56,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
 
+    Route::get('/eventos-cronogramas/{id}', [App\Http\Controllers\EventoController::class, 'obtenerConDetallesCompleto']);
+
     // Rutas para cronogramas
     Route::apiResource('cronogramas', CronogramaController::class);
 

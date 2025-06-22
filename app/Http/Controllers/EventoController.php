@@ -6,6 +6,7 @@ use App\Models\Evento;
 use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB; 
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
@@ -144,6 +145,112 @@ class EventoController extends Controller
         ]));
         $evento->actualizado_en = Carbon::now();
         $evento->save();
+
+        return response()->json($evento);
+    }
+
+
+    /**
+     * Obtiene el detalle completo de un evento con sus cronogramas y actividades anidadas.
+     * Nueva ruta: /api/eventos-cronogramas/{id}
+     *
+     * @param int $id El ID del evento.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function obtenerConDetallesCompleto(int $id)
+    {
+        // Opcional: Si el usuario debe tener rol_id = 1 para ver esto
+        // if (request()->user()->rol_id !== 1) {
+        //     return response()->json(['message' => 'No tienes permiso para ver el detalle completo de eventos.'], 403);
+        // }
+
+        // Ejecutar el stored procedure
+        $results = DB::select('CALL sp_obtener_detalle_evento_consolidado(?)', [$id]);
+
+        if (empty($results)) {
+            return response()->json(['message' => 'Evento no encontrado o borrado.'], 404);
+        }
+
+        $evento = null;
+        $cronogramas = []; // Usaremos un array asociativo para agrupar por cronograma_id
+
+        foreach ($results as $row) {
+            // Inicializar el evento una sola vez con los datos de la primera fila
+            if ($evento === null) {
+                $evento = [
+                    "id" => $row->evento_id,
+                    "creado_en" => $row->evento_creado_en,
+                    "actualizado_en" => $row->evento_actualizado_en,
+                    "estado_borrado" => (bool)$row->evento_estado_borrado,
+                    "borrado_en" => $row->evento_borrado_en,
+                    "nombre" => $row->evento_nombre,
+                    "descripcion" => $row->evento_descripcion,
+                    "fecha_inicio" => $row->evento_fecha_inicio,
+                    "fecha_fin" => $row->evento_fecha_fin,
+                    "capacidad" => $row->evento_capacidad,
+                    "espacio" => $row->evento_espacio,
+                    "modalidad" => $row->evento_modalidad,
+                    "sede_id" => $row->evento_sede_id,
+                    "categoria_id" => $row->evento_categoria_id, // Mantén categoria_id
+                    "hayEquipos" => (int)$row->evento_hayEquipos,
+                    "hayFormulario" => (bool)$row->evento_hayFormulario,
+                    "estado" => $row->evento_estado,
+                    "inscripcionesAbiertas" => (bool)$row->evento_inscripcionesAbiertas,
+                    "cronogramas" => []
+                ];
+
+                // *********** IMPORTANTE ***********
+                // Aquí se carga el nombre de la categoría usando Eloquent.
+                // Es una consulta adicional, pero asegura que el nombre de la categoría esté.
+                // Si modificas el SP para que devuelva el nombre de la categoría,
+                // elimina esta sección y usa directamente $row->categoria si es el alias en el SP.
+                $eventoModel = Evento::find($row->evento_id);
+                if ($eventoModel) { // Asegura que el modelo exista
+                    $eventoModel->load('categorium'); // Carga la relación
+                    $evento['categoria'] = $eventoModel->categorium ? $eventoModel->categorium->nombre : null;
+                }
+                // **********************************
+            }
+
+            // Procesar cronogramas si existen para esta fila
+            if ($row->cronograma_id !== null) {
+                if (!isset($cronogramas[$row->cronograma_id])) {
+                    $cronogramas[$row->cronograma_id] = [
+                        "id" => $row->cronograma_id,
+                        "evento_id" => $row->evento_id,
+                        "titulo" => $row->cronograma_titulo,
+                        "descripcion" => $row->cronograma_descripcion,
+                        "fecha_inicio" => $row->cronograma_fecha_inicio,
+                        "fecha_fin" => $row->cronograma_fecha_fin,
+                        "creado_en" => $row->cronograma_creado_en,
+                        "actualizado_en" => $row->cronograma_actualizado_en,
+                        "actividades_cronogramas" => []
+                    ];
+                }
+
+                // Procesar actividades de cronograma si existen para esta fila
+                if ($row->actividad_id !== null) {
+                    $actividad = [
+                        "id" => $row->actividad_id,
+                        "cronograma_id" => $row->cronograma_id,
+                        "titulo" => $row->actividad_titulo,
+                        "descripcion" => $row->actividad_descripcion,
+                        "fecha_inicio" => $row->actividad_fecha_inicio,
+                        "fecha_fin" => $row->actividad_fecha_fin,
+                        "orden" => $row->actividad_orden,
+                        "dependencia_id" => $row->actividad_dependencia_id,
+                        "creado_en" => $row->actividad_creado_en,
+                        "actualizado_en" => $row->actividad_actualizado_en
+                    ];
+                    $cronogramas[$row->cronograma_id]['actividades_cronogramas'][] = $actividad;
+                }
+            }
+        }
+
+        // Si se encontró el evento, adjuntar los cronogramas (y sus actividades)
+        if ($evento !== null) {
+            $evento['cronogramas'] = array_values($cronogramas);
+        }
 
         return response()->json($evento);
     }
