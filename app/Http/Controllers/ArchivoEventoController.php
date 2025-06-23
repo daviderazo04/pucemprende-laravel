@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ArchivoEvento;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ArchivoEventoController extends Controller
 {
@@ -54,6 +55,20 @@ class ArchivoEventoController extends Controller
     {
         $archivos = ArchivoEvento::where('evento_id', $evento_id)->get();
         return response()->json($archivos);
+    }
+    public function getByEventoURL($id)
+    {
+        try {
+            $resultado = DB::select('CALL sp_buscar_archivo_evento_url_por_id(?)', [$id]);
+
+            if (empty($resultado)) {
+                return response()->json(['message' => 'No se encontró el archivo evento.'], 404);
+            }
+
+            return response()->json($resultado[0]); // devuelve el primer registro si se espera solo uno
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al ejecutar el procedimiento: ' . $e->getMessage()], 500);
+        }
     }
     /**
      * Update the specified resource in storage.
