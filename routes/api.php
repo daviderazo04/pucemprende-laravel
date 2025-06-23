@@ -51,6 +51,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     Route::apiResource('eventos', EventoController::class);
 
+    Route::get('/eventos-cronogramas/{id}', [App\Http\Controllers\EventoController::class, 'obtenerConDetallesCompleto']);
+
     // Rutas para cronogramas
     Route::apiResource('cronogramas', CronogramaController::class);
 
@@ -116,12 +118,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('procesos-evaluacion', App\Http\Controllers\Api\ProcesosEvaluacionController::class);
     Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
     Route::apiResource('criterios', App\Http\Controllers\Api\CriterioController::class);
-
-
-
 });
 
 
 
 // Incluye las rutas de autenticación como /api/register, /api/login, etc.
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
