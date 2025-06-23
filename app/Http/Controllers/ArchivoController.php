@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+
 class ArchivoController extends Controller
 {
     /**
@@ -34,7 +35,6 @@ class ArchivoController extends Controller
         $request->validate([
             'file' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // Max 10MB (10240 KB)
             'name' => 'sometimes|string|max:255',
-            'tipo' => 'required|string|max:50',
         ]);
 
         if ($request->hasFile('file')) {
@@ -60,7 +60,7 @@ class ArchivoController extends Controller
                     'estado_borrado' => false,
                     'borrado_en' => null,
                     'url' => $publicUrl, // Store the public URL
-                    'tipo' => $request->tipo, // Store the file type (e.g., 'cover', 'additional')
+                    'tipo' => $originalExtension // Store the file type (e.g., '.png', '.jpg')
                 ]);
 
                 return response()->json([
@@ -94,7 +94,7 @@ class ArchivoController extends Controller
      */
     public function store(Request $request)
     {
-        if($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para crear archivos.'], 403);
         }
         $validator = Validator::make($request->all(), [
@@ -128,7 +128,7 @@ class ArchivoController extends Controller
      */
     public function update(Request $request, Archivo $archivo)
     {
-        if($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para actualizar archivos.'], 403);
         }
         $validator = Validator::make($request->all(), [
@@ -151,7 +151,7 @@ class ArchivoController extends Controller
      */
     public function destroy(Archivo $archivo)
     {
-        if(request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para eliminar archivos.'], 403);
         }
         $archivo->update([

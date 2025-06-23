@@ -74,8 +74,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas - Roles Proyecto
     Route::apiResource('roles-proyecto', RolesProyectoController::class);
 
-    // Rutas - Archivos
-    Route::apiResource('archivos', ArchivoController::class);
+    // Rutas - Archivos (post para un file especifico, solo acepta files via blob, en este caso imagenes) (multipart/form-data)
+    Route::post('/archivos/upload', [ArchivoController::class, 'storeFile']);
+
+    // Rutas - Archivos (standard JSON para Archivo (Creando con una URL))
+    Route::apiResource('archivos', ArchivoController::class)->except(['store']);
 
     // Rutas - Archivos de Proyecto
     Route::apiResource('archivos-proyecto', ArchivoProyectoController::class);
