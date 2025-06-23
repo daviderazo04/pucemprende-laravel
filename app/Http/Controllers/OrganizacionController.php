@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Organizacione;
+use App\Models\VwOrganizaciones;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 class OrganizacionController extends Controller
@@ -98,5 +99,10 @@ class OrganizacionController extends Controller
         $organizacione->save();
 
         return response()->json(['message' => 'Organización eliminada correctamente.'], 200);
+    }
+    public function vwOrganizaciones()
+    {
+        $vwOrganizaciones = VWOrganizaciones::all();
+        return response()->json($vwOrganizaciones);
     }
 }
