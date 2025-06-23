@@ -50,7 +50,11 @@ class ArchivoEventoController extends Controller
     {
         return response()->json($archivoEvento);
     }
-
+    public function getByEvento($evento_id)
+    {
+        $archivos = ArchivoEvento::where('evento_id', $evento_id)->get();
+        return response()->json($archivos);
+    }
     /**
      * Update the specified resource in storage.
      */

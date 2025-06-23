@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('archivos-proyecto', ArchivoProyectoController::class);
 
     // Rutas - Archivos de Evento
+    Route::get('archivos-evento/evento/{evento_id}', [ArchivoEventoController::class, 'getByEvento']);
     Route::apiResource('archivos-evento', ArchivoEventoController::class);
 
     // Rutas - Organizaciones
