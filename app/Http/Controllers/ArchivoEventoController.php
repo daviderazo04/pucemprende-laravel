@@ -65,7 +65,7 @@ class ArchivoEventoController extends Controller
                 return response()->json(['message' => 'No se encontró el archivo evento.'], 404);
             }
 
-            return response()->json($resultado[0]); // devuelve el primer registro si se espera solo uno
+            return response()->json($resultado);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al ejecutar el procedimiento: ' . $e->getMessage()], 500);
         }

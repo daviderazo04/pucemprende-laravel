@@ -23,7 +23,7 @@ use App\Http\Controllers\ArchivoEventoController;
 use App\Http\Controllers\ArchivoProyectoController;
 use App\Http\Controllers\EquiposGanadoreController;
 use App\Http\Controllers\EquipoProyectoController;
-use App\Http\Controllers\DB;
+
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
