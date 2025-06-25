@@ -110,7 +110,7 @@ class EventoController extends Controller
             'categoria_id' => 'nullable|integer',
             'hayEquipos' => 'nullable|integer|min:0',
             'hayFormulario' => 'nullable|boolean',
-            'estado' => 'required|string|max:8',
+            'estado' => 'required|string|max:15',
             'inscripcionesAbiertas' => 'nullable|boolean',
         ]);
 
@@ -174,7 +174,7 @@ class EventoController extends Controller
             'categoria_id' => 'nullable|integer',
             'hayEquipos' => 'nullable|integer|min:0',
             'hayFormulario' => 'nullable|boolean',
-            'estado' => 'nullable|string|max:8',
+            'estado' => 'nullable|string|max:15',
             'inscripcionesAbiertas' => 'nullable|boolean',
             'estado_borrado' => 'nullable|boolean',
             'borrado_en' => 'nullable|date',
