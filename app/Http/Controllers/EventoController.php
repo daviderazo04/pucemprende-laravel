@@ -6,7 +6,7 @@ use App\Models\Evento;
 use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
@@ -38,10 +38,11 @@ class EventoController extends Controller
      */
     public function getPaginatedEvents(Request $request)
     {
-        // Validar los parámetros de entrada 'limit' y 'offset'
+        // Validar los parámetros de entrada 'limit', 'offset' y 'search'
         $validator = Validator::make($request->all(), [
             'limit' => 'required|integer|min:1',
             'offset' => 'required|integer|min:0',
+            'search' => 'nullable|string|max:255', //Parámetro de búsqueda opcional
         ]);
 
         if ($validator->fails()) {
@@ -50,19 +51,38 @@ class EventoController extends Controller
 
         $limit = $request->input('limit');
         $offset = $request->input('offset');
+        $searchQuery = $request->input('search');
 
         try {
-            // Llamar al Stored Procedure GetEventosLimitOffset
-            $eventos = DB::select('CALL GetEventosLimitOffset(?, ?)', [$limit, $offset]);
+            $baseQuery = Evento::query()->where('estado_borrado', false);
 
-            // El SP ya devuelve el campo 'categoria' directamente, por lo que no es necesario
-            // hacer el 'with('categorium')' ni manipular la respuesta como en el método index.
-            // Asegúrate de que tu SP realmente devuelve 'categoria' como alias del nombre de la categoría.
+            if ($searchQuery) {
+                $baseQuery->where(function ($query) use ($searchQuery) {
+                    $query->where('nombre', 'like', '%' . $searchQuery . '%')
+                          ->orWhere('descripcion', 'like', '%' . $searchQuery . '%');
+                });
+            }
 
-            return response()->json($eventos);
+            $totalCount = $baseQuery->count();
+
+            $paginatedEvents = $baseQuery->with('categorium')
+                                         ->offset($offset)
+                                         ->limit($limit)
+                                         ->get();
+
+            $formattedEvents = $paginatedEvents->map(function ($evento) {
+                $eventoArray = $evento->toArray();
+                $eventoArray['categoria'] = $evento->categorium ? $evento->categorium->nombre : null;
+                unset($eventoArray['categoria_id'], $eventoArray['categorium']);
+                return $eventoArray;
+            });
+
+            return response()->json([
+                'data' => $formattedEvents,
+                'total' => $totalCount,
+            ]);
 
         } catch (\Exception $e) {
-            // Manejo de errores en caso de que el SP falle
             return response()->json(['message' => 'Error al obtener eventos paginados.', 'error' => $e->getMessage()], 500);
         }
     }
