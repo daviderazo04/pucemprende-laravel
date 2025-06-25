@@ -99,8 +99,9 @@ class ArchivoEventoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ArchivoEvento $archivoEvento)
+    public function destroy($id)
     {
+        $archivoEvento = ArchivoEvento::find($id);
         // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para eliminar archivos de eventos.'], 403);
