@@ -54,21 +54,21 @@ class EventoController extends Controller
         $searchQuery = $request->input('search');
 
         try {
-            $baseQuery = Evento::query()->where('estado_borrado', false);
+            $baseQuery = Evento::query();
 
             if ($searchQuery) {
                 $baseQuery->where(function ($query) use ($searchQuery) {
                     $query->where('nombre', 'like', '%' . $searchQuery . '%')
-                          ->orWhere('descripcion', 'like', '%' . $searchQuery . '%');
+                        ->orWhere('descripcion', 'like', '%' . $searchQuery . '%');
                 });
             }
 
             $totalCount = $baseQuery->count();
 
             $paginatedEvents = $baseQuery->with('categorium')
-                                         ->offset($offset)
-                                         ->limit($limit)
-                                         ->get();
+                ->offset($offset)
+                ->limit($limit)
+                ->get();
 
             $formattedEvents = $paginatedEvents->map(function ($evento) {
                 $eventoArray = $evento->toArray();
@@ -81,7 +81,6 @@ class EventoController extends Controller
                 'data' => $formattedEvents,
                 'total' => $totalCount,
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al obtener eventos paginados.', 'error' => $e->getMessage()], 500);
         }
