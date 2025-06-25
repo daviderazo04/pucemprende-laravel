@@ -50,6 +50,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
+    // Ruta específica para eventos paginados (DEBE IR PRIMERO)
+    Route::get('/eventos/limit-offset', [EventoController::class, 'getPaginatedEvents']);
     Route::apiResource('eventos', EventoController::class);
 
     Route::get('/eventos-cronogramas/{id}', [App\Http\Controllers\EventoController::class, 'obtenerConDetallesCompleto']);
@@ -105,6 +107,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //Rutas - Equipos Ganadores
     Route::apiResource('equipos-ganadores', EquiposGanadoreController::class);
+
+
 
     //Tabla interseccion de evento-dochabilitante
     Route::get('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'show']);

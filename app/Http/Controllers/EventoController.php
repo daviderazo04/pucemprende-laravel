@@ -28,6 +28,45 @@ class EventoController extends Controller
         return response()->json($eventos);
     }
 
+    /**
+     * Obtiene eventos paginados usando el Stored Procedure GetEventosLimitOffset.
+     * Los parámetros 'limit' y 'offset' se esperan en la URL de la solicitud.
+     * Por ejemplo: /api/eventos/paginated?limit=15&offset=0
+     *
+     * @param Request $request La instancia de la solicitud HTTP.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getPaginatedEvents(Request $request)
+    {
+        // Validar los parámetros de entrada 'limit' y 'offset'
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required|integer|min:1',
+            'offset' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $limit = $request->input('limit');
+        $offset = $request->input('offset');
+
+        try {
+            // Llamar al Stored Procedure GetEventosLimitOffset
+            $eventos = DB::select('CALL GetEventosLimitOffset(?, ?)', [$limit, $offset]);
+
+            // El SP ya devuelve el campo 'categoria' directamente, por lo que no es necesario
+            // hacer el 'with('categorium')' ni manipular la respuesta como en el método index.
+            // Asegúrate de que tu SP realmente devuelve 'categoria' como alias del nombre de la categoría.
+
+            return response()->json($eventos);
+
+        } catch (\Exception $e) {
+            // Manejo de errores en caso de que el SP falle
+            return response()->json(['message' => 'Error al obtener eventos paginados.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         if ($request->user()->rol_id !== 1) {
