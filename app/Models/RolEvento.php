@@ -30,4 +30,9 @@ class RolEvento extends Model
     {
         return $this->hasMany(EventoRolPersona::class, 'rol_id');
     }
+
+    public function roles_plantillas()
+	{
+		return $this->hasMany(RolesPlantilla::class, 'rol_id');
+	}
 }

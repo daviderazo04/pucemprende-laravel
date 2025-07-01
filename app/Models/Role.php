@@ -41,11 +41,6 @@ class Role extends Model
 		'descripcion'
 	];
 
-	public function roles_plantillas()
-	{
-		return $this->hasMany(RolesPlantilla::class, 'rol_id');
-	}
-
 	public function users()
 	{
 		return $this->hasMany(User::class, 'rol_id');

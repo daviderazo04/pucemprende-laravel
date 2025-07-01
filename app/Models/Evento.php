@@ -89,10 +89,6 @@ class Evento extends Model
 		'inscripcionesAbiertas' => 'boolean',
 	];
 
-	public function autor()
-    {
-        return $this->belongsTo(Persona::class, 'autor');
-    }
 	public function categorium()
 	{
 		return $this->belongsTo(Categorium::class, 'categoria_id');
@@ -137,4 +133,5 @@ class Evento extends Model
 	{
 		return $this->hasMany(EventoRolPersona::class, 'evento_id');
 	}
+
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Models\EventoRolPersona;
 
 class EventoController extends Controller
 {
@@ -88,7 +89,7 @@ class EventoController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para crear eventos.'], 403);
         }
 
@@ -118,27 +119,44 @@ class EventoController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $evento = Evento::create([
-            'creado_en' => Carbon::now(),
-            'actualizado_en' => Carbon::now(),
-            'estado_borrado' => false,
-            'borrado_en' => null,
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
-            'capacidad' => $request->capacidad,
-            'espacio' => $request->espacio,
-            'modalidad' => $request->modalidad,
-            'sede_id' => $request->sede_id,
-            'categoria_id' => $request->categoria_id,
-            'hayEquipos' => $request->hayEquipos ?? 0,
-            'hayFormulario' => $request->hayFormulario ?? 0,
-            'estado' => $request->estado,
-            'inscripcionesAbiertas' => $request->inscripcionesAbiertas ?? 0,
-        ]);
+        // Iniciar una transacción de base de datos para asegurar atomicidad
+        DB::beginTransaction();
+        try {
+            $evento = Evento::create([
+                'creado_en' => Carbon::now(),
+                'actualizado_en' => Carbon::now(),
+                'estado_borrado' => false,
+                'borrado_en' => null,
+                'nombre' => $request->nombre,
+                'descripcion' => $request->descripcion,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'capacidad' => $request->capacidad,
+                'espacio' => $request->espacio,
+                'modalidad' => $request->modalidad,
+                'sede_id' => $request->sede_id,
+                'categoria_id' => $request->categoria_id,
+                'hayEquipos' => $request->hayEquipos ?? 0,
+                'hayFormulario' => $request->hayFormulario ?? 0,
+                'estado' => $request->estado,
+                'inscripcionesAbiertas' => $request->inscripcionesAbiertas ?? 0,
+            ]);
 
-        return response()->json($evento, 201);
+            // Insertar el registro en la tabla evento_rol_persona
+            // Asociar el evento recién creado con la persona que lo crea y el rol_evento_id 1
+            EventoRolPersona::create([
+                'evento_id' => $evento->id, // Acceso correcto al ID del evento recién creado
+                'rol_id' => 1, // ID del rol de 'Autor' o 'Creador'
+                'persona_id' => $persona->id, // Acceso correcto al ID de la persona
+            ]);
+
+            DB::commit(); // Confirmar la transacción si todo fue exitoso
+            return response()->json($evento, 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // Revertir la transacción en caso de cualquier error
+            return response()->json(['message' => 'Error al crear el evento y asignar el rol.', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function show(Evento $evento)
@@ -152,13 +170,25 @@ class EventoController extends Controller
 
     public function update(Request $request, Evento $evento)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar eventos.'], 403);
         }
 
         $persona = Persona::where('users_id', $request->user()->id)->first();
 
-        if (!$persona /*|| $evento->autor != $persona->id*/) {
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
         }
 
