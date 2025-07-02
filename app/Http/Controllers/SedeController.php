@@ -19,7 +19,7 @@ class SedeController extends Controller
         //Solo los administradores pueden acceder a las sedes 
         //(no tiene sentido que cualquier usuario las pueda ver porque solo sirven para asociar un proyecto con ellas)
         
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -32,8 +32,8 @@ class SedeController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para añadir una nueva sede.'], 403);
         }
 
@@ -59,7 +59,7 @@ class SedeController extends Controller
     {
         //Solo admin puede ver las sedes
 
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
         
@@ -80,7 +80,7 @@ class SedeController extends Controller
     {
         print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para editar una sede.'], 403);
         }
 
@@ -107,7 +107,7 @@ class SedeController extends Controller
     public function destroy(Sede $sede)
     {
          // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar una sede.'], 403);
         }
 

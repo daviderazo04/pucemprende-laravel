@@ -19,7 +19,7 @@ class CategoriaController extends Controller
         //Solo los administradores pueden acceder a las categorias de eventos 
         //(no tiene sentido que cualquier usuario las pueda ver porque solo sirven para asociar un proyecto con ellas)
         
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -32,9 +32,8 @@ class CategoriaController extends Controller
      */
     public function store(Request $request)
     {
-        print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 1 admin de evento o rol_id = 8 admin del sistema
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para añadir una nueva categoría.'], 403);
         }
 
@@ -58,8 +57,8 @@ class CategoriaController extends Controller
      */
     public function show(Request $request, $id)
     {
-        // Solo admin puede ver las categorias
-        if ($request->user()->rol_id !== 1) {
+        // Solo admin puede ver las categorias 
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -79,8 +78,8 @@ class CategoriaController extends Controller
     public function update(Request $request, Categorium $categorium)
     {
         print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 8 (admin del sistema)
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para editar una categoria.'], 403);
         }
 
@@ -106,8 +105,8 @@ class CategoriaController extends Controller
      */
     public function destroy(Categorium $categorium)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 8 (admin del sistema)
+        if (request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar una categoría.'], 403);
         }
 
