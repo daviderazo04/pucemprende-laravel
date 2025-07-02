@@ -16,7 +16,7 @@ class RolEventoController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
         } else{
             $rolEvento = RolEvento::all();
@@ -30,7 +30,7 @@ class RolEventoController extends Controller
     public function store(Request $request)
     {
         // Solo admin puede añadir miembros a un proyecto
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para agregar un nuevo rol de evento.'], 403);
         }
 
@@ -56,7 +56,7 @@ class RolEventoController extends Controller
     {
         // Solo Admin puede ver miembros de un proyecto
 
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
         
@@ -73,7 +73,7 @@ class RolEventoController extends Controller
     public function update(Request $request, RolEvento $rolEvento)
     {
         // Solo admin puede añadir miembros a un proyecto
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para agregar un nuevo rol de evento.'], 403);
         }
 
@@ -100,7 +100,7 @@ class RolEventoController extends Controller
     public function destroy(RolEvento $rolEvento)
     {
         // Solo admin puede borrar
-        if (request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar una rol de evento.'], 403);
         }
 

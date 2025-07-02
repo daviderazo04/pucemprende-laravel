@@ -12,6 +12,7 @@ use App\Models\EventoRolPersona;
 use App\Models\Persona;
 use App\Models\Evento;
 use App\Models\Equipo;
+use App\Models\MiembrosProyecto;
 
 class ProyectoController extends Controller
 {
@@ -86,6 +87,14 @@ class ProyectoController extends Controller
             'fecha_fin' => $request->fecha_fin,
         ]);
 
+        $miembrosProyecto = MiembrosProyecto::create([
+            'creado_en' => Carbon::now(),
+            'actualizado_en' => Carbon::now(),
+            'rol_id' => 1, // Asignar rol de autor al creador del proyecto
+            'proyecto_id' => $proyecto->id,
+            'persona_id' => $persona->id,
+        ]);
+        
         return response()->json($proyecto, 201);
     }
 

@@ -16,12 +16,31 @@ class EventoRolPersonaController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
-        } else{
-            $eventoRolPersona = EventoRolPersona::all();
-            return response()->json($eventoRolPersona);
         }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
+        }
+
+        $eventoRolPersona = EventoRolPersona::all();
+        return response()->json($eventoRolPersona);
+        
     }
 
     /**
@@ -29,9 +48,27 @@ class EventoRolPersonaController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para asignar un rol a una persona en un evento.'], 403);
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -58,10 +95,28 @@ class EventoRolPersonaController extends Controller
      */
     public function show(Request $request, EventoRolPersona $eventoRolPersona)
     {
-        // Solo Admin puede ver miembros de un proyecto
+        // Solo Admin puede ver roles de personas en un evento
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
+        }
 
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
         }
         
         if (!$eventoRolPersona) {
@@ -76,9 +131,27 @@ class EventoRolPersonaController extends Controller
      */
     public function update(Request $request, EventoRolPersona $eventoRolPersona)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para asignar un rol a una persona en un evento.'], 403);
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este elemento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este elemento.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -107,9 +180,27 @@ class EventoRolPersonaController extends Controller
      */
     public function destroy(EventoRolPersona $eventoRolPersona)
     {
-        // Solo admin puede borrar
-        if (request()->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar un rol de persona en un evento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para borrar este elemento.'], 403);
         }
 
         // Intenta eliminar el documento

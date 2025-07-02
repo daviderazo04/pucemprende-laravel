@@ -16,12 +16,12 @@ class RolesProyectoController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
-        } else{
-            $rolesProyecto = RolesProyecto::all();
-            return response()->json($rolesProyecto);
         }
+
+        $rolesProyecto = RolesProyecto::all();
+        return response()->json($rolesProyecto);
     }
 
     /**
@@ -30,7 +30,7 @@ class RolesProyectoController extends Controller
     public function store(Request $request)
     {
         // Solo admin puede añadir miembros a un proyecto
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para agregar un nuevo rol de proyecto.'], 403);
         }
 
@@ -58,7 +58,7 @@ class RolesProyectoController extends Controller
     {
         // Solo Admin puede ver miembros de un proyecto
 
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
         
@@ -74,7 +74,7 @@ class RolesProyectoController extends Controller
      */
     public function update(Request $request, RolesProyecto $rolesProyecto)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para agregar un nuevo rol de proyecto.'], 403);
         }
 
