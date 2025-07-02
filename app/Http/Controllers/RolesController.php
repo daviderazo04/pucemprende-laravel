@@ -17,7 +17,7 @@ class RolesController extends Controller
     public function index(Request $request)
     {
         //Solo los administradores pueden acceder a los roles
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -31,7 +31,7 @@ class RolesController extends Controller
     public function store(Request $request)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para añadir un nuevo rol.'], 403);
         }
 
@@ -61,7 +61,7 @@ class RolesController extends Controller
     {
         // Solo Admin puede ver roles
 
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -81,7 +81,7 @@ class RolesController extends Controller
     public function update(Request $request, $id)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para editar un rol.'], 403);
         }
 
@@ -120,7 +120,7 @@ class RolesController extends Controller
         }
     
         // Admin puede borrar
-        if (request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar este elemento.'], 403);
         }
 
