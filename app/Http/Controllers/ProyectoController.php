@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\EventoRolPersona;
+use App\Models\Persona;
+use App\Models\Evento;
+use App\Models\Equipo;
 
 class ProyectoController extends Controller
 {
@@ -25,14 +29,41 @@ class ProyectoController extends Controller
      */
     public function store(Request $request)
     {
-        //print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para crear eventos.'], 403);
+        // Solo permitir si el usuario está inscrito en un evento o si es dueño del evento o superadministrador
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $equipo = Equipo::find($request->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
+            return response()->json(['message' => 'No tienes permiso para crear un proyecto ya que no estás inscrito al evento.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'equipo_id' => 'nullableY|integer|exists:equipos,id',
+            'equipo_id' => 'nullable|integer|exists:equipos,id',
             'titulo' => 'required|string|max:50',
             'descripcion' => 'required|string|max:1000',
             'estado' => 'required|string|max:20',
@@ -78,8 +109,36 @@ class ProyectoController extends Controller
      */
     public function update(Request $request, Proyecto $proyecto)
     {
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para crear eventos.'], 403);
+        // Solo permitir si el usuario está inscrito en un evento o si es dueño del evento o superadministrador
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $equipo = Equipo::find($request->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -115,8 +174,26 @@ class ProyectoController extends Controller
      */
     public function destroy(Proyecto $proyecto)
     {
-        if (request()->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar proyectos.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
         }
 
         $proyecto->estado = "BORRADO";

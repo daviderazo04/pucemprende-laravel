@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\EventoRolPersona;
+use App\Models\Persona;
+use App\Models\Evento;
+use App\Models\Equipo;
 
 class EventoDocHabilitanteController extends Controller
 {
@@ -16,8 +20,8 @@ class EventoDocHabilitanteController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante con un evento.'], 403);
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para ver los documentos habilitantes logados con un evento.'], 403);
         }
         
         $eventosDocHabilitante = EventoDocHabilitante::all();
@@ -31,8 +35,31 @@ class EventoDocHabilitanteController extends Controller
     {
         //print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante con un evento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante a un evento.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -58,8 +85,30 @@ class EventoDocHabilitanteController extends Controller
     public function show($evento_id, $dochab_id)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
+        if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
+        }
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
         }
 
         // Buscar la relación utilizando ambos identificadores
@@ -77,8 +126,30 @@ class EventoDocHabilitanteController extends Controller
      */
     public function update(Request $request, $evento_id, $dochab_id)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante con un evento.'], 403);
+        }
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para editar este elemento.'], 403);
         }
 
         // Validar que ambos IDs existan en sus respectivas tablas
@@ -114,9 +185,37 @@ class EventoDocHabilitanteController extends Controller
     public function destroy($evento_id, $dochab_id)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar este elemento.'], 403);
         }
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para eliminar este elemento.'], 403);
+        }
+
+        // Validar que ambos IDs existan en sus respectivas tablas
+        $validator = Validator::make($request->all(), [
+            'evento_id' => 'required|integer|exists:eventos,id',
+            'dochab_id' => 'required|integer|exists:doc_habilitantes,id',
+        ]);
 
         // Buscar la relación a eliminar
         $eventoDocHabilitante = EventoDocHabilitante::where('evento_id', $evento_id)->where('dochab_id', $dochab_id)->first();

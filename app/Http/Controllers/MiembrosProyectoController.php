@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\EventoRolPersona;
+use App\Models\Persona;
+use App\Models\Evento;
+use App\Models\Equipo;
+use App\Models\Proyecto;
+use App\Models\RolesProyecto;
 
 class MiembrosProyectoController extends Controller
 {
@@ -16,12 +22,8 @@ class MiembrosProyectoController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
-            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
-        } else{
-            $miembrosProyecto = MiembrosProyecto::all();
-            return response()->json($miembrosProyecto);
-        }
+        $miembrosProyecto = MiembrosProyecto::all();
+        return response()->json($miembrosProyecto);
     }
 
     /**
@@ -30,8 +32,52 @@ class MiembrosProyectoController extends Controller
     public function store(Request $request)
     {
         // Admin y usuarios pueden añadir miembros a un proyecto
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
-            return response()->json(['message' => 'No tienes permiso para agregar miembros a un proyecto.'], 403);
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::find($request->proyecto_id);
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        $equipo = Equipo::find($proyecto->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
+        }
+
+        $esLider = RolesProyecto::find($request->rol_id);
+        if (!$esLider) {
+            return response()->json(['error' => 'Rol de proyecto no encontrado'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->exists();
+
+        
+
+        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
+            return response()->json(['message' => 'No tienes permiso para añadir miembros a un proyecto.'], 403);
+        }
+
+        if($esLider->id !== 1) {
+            return response()->json(['message' => 'No tienes permiso para añadir miembros a un proyecto, no eres el lider.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -63,12 +109,7 @@ class MiembrosProyectoController extends Controller
      */
     public function show(MiembrosProyecto $miembrosProyecto)
     {
-        // Admin y usuarios pueden ver miembros de un proyecto
-
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
-            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
-        }
-        
+        // Todos pueden ver los miembros del proyecto
         if (!$miembrosProyecto) {
             return response()->json(['message' => 'Miembro del proyecto no encontrado'], 404);
         }
@@ -82,8 +123,52 @@ class MiembrosProyectoController extends Controller
     public function update(Request $request, MiembrosProyecto $miembrosProyecto)
     {
         // Admin y usuarios pueden editar a los miembros del equipo
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
-            return response()->json(['message' => 'No tienes permiso para editar los miembros de un proyecto.'], 403);
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::find($request->proyecto_id);
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        $equipo = Equipo::find($proyecto->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
+        }
+
+        $esLider = RolesProyecto::find($request->rol_id);
+        if (!$esLider) {
+            return response()->json(['error' => 'Rol de proyecto no encontrado'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->exists();
+
+        
+
+        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
+            return response()->json(['message' => 'No tienes permiso para editar miembros a un proyecto.'], 403);
+        }
+
+        if($esLider->id !== 1) {
+            return response()->json(['message' => 'No tienes permiso para editar miembros a un proyecto, no eres el lider.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -118,9 +203,37 @@ class MiembrosProyectoController extends Controller
     public function destroy(MiembrosProyecto $miembrosProyecto)
     {
          // Admin y usuarios pueden borrar
-        if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
+        if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar una miembro de proyecto.'], 403);
         }
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::find($request->proyecto_id);
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        $equipo = Equipo::find($proyecto->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
 
         // Intenta eliminar el documento
         try {

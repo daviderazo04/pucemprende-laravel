@@ -23,6 +23,8 @@ use App\Http\Controllers\ArchivoEventoController;
 use App\Http\Controllers\ArchivoProyectoController;
 use App\Http\Controllers\EquiposGanadoreController;
 use App\Http\Controllers\EquipoProyectoController;
+use App\Http\Controllers\EventoRolPersonaController;
+use App\Http\Controllers\RolEventoController;
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -108,7 +110,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Rutas - Equipos Ganadores
     Route::apiResource('equipos-ganadores', EquiposGanadoreController::class);
 
+    //Rutas - Evento Rol Persona
+    Route::apiResource('evento-rol-persona', EventoRolPersonaController::class);
 
+    //Rutas - Roles de Evento
+    Route::apiResource('rolEvento', RolEventoController::class);
 
     //Tabla interseccion de evento-dochabilitante
     Route::get('evento-dochabilitante/{evento_id}/{dochab_id}', [EventoDocHabilitanteController::class, 'show']);

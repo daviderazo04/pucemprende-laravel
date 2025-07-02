@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Persona;
+use App\Models\Evento;
+use App\Models\EventoRolPersona;
 
 class DocHabilitanteController extends Controller
 {
@@ -16,7 +19,7 @@ class DocHabilitanteController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -29,10 +32,15 @@ class DocHabilitanteController extends Controller
      */
     public function store(Request $request)
     {
-        print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 1 u 8 (administrador de eventos o superadministrador)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para añadir documentos habilitantes a un evento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -58,9 +66,16 @@ class DocHabilitanteController extends Controller
      */
     public function show(Request $request, $id)
     {
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
         // Buscar la documento habilitante por id
         $doc = DocHabilitante::find($id);
 
@@ -76,10 +91,15 @@ class DocHabilitanteController extends Controller
      */
     public function update(Request $request, DocHabilitante $docHabilitante)
     {
-        print($request->user());
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para editar documentos habilitantes a un evento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -107,8 +127,14 @@ class DocHabilitanteController extends Controller
     public function destroy(DocHabilitante $docHabilitante)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar documentos habilitantes.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
         // Intenta eliminar el documento
