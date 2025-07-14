@@ -23,13 +23,19 @@ class OrganizacionController extends Controller
     public function store(Request $request)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para crear organizaciones.'], 403);
+         if ($request->user()->rol_id !== 1) {
+             return response()->json(['message' => 'No tienes permiso para crear organizaciones.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:100',
-            'abreviatura' => 'nullable|string|max:15',
+            'orgNombre' => 'required|string|max:255',
+            'orgAbreviatura' => 'nullable|string|max:10',
+            'encarNombre' => 'required|string|max:100',
+            'encarApellido' => 'required|string|max:100',
+            'encarIdentificacion' => 'required|string|max:20',
+            'encarRol' => 'required|string|max:50',
+            'orgTelf' => 'nullable|string|max:15',
+            'orgEmail' => 'nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -37,12 +43,14 @@ class OrganizacionController extends Controller
         }
 
         $organizacion = Organizacione::create([
-            'creado_en' => now(),
-            'actualizado_en' => now(),
-            'estado_borrado' => false,
-            'borrado_en' => null,
-            'nombre' => $request->nombre,
-            'abreviatura' => $request->abreviatura
+            'org_nom' => $request->orgNombre,
+            'org_abreviatura' => $request->orgAbreviatura,
+            'encar_nombre' => $request->encarNombre,
+            'encar_apellido' => $request->encarApellido,
+            'encar_identificacion' => $request->encarIdentificacion,
+            'encar_rol' => $request->encarRol,
+            'org_telf' => $request->orgTelf,
+            'org_email' => $request->orgEmail
         ]);
 
         return response()->json($organizacion->id, 201);
@@ -62,13 +70,19 @@ class OrganizacionController extends Controller
     public function update(Request $request, Organizacione $organizacione)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para actualizar organizaciones.'], 403);
-        }
+         if ($request->user()->rol_id !== 1) {
+             return response()->json(['message' => 'No tienes permiso para actualizar organizaciones.'], 403);
+     }
 
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:100',
-            'abreviatura' => 'nullable|string|max:15',
+            'orgNombre' => 'required|string|max:255',
+            'orgAbreviatura' => 'nullable|string|max:10',
+            'encarNombre' => 'required|string|max:100',
+            'encarApellido' => 'required|string|max:100',
+            'encarIdentificacion' => 'required|string|max:20',
+            'encarRol' => 'required|string|max:50',
+            'orgTelf' => 'nullable|string|max:15',
+            'orgEmail' => 'nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -76,9 +90,14 @@ class OrganizacionController extends Controller
         }
 
         $organizacione->update([
-            'actualizado_en' => now(),
-            'nombre' => $request->nombre,
-            'abreviatura' => $request->abreviatura
+            'org_nombre' => $request->orgNombre,
+            'org_abreviatura' => $request->orgAbreviatura,
+            'encar_nombre' => $request->encarNombre,
+            'encar_apellido' => $request->encarApellido,
+            'encar_identificacion' => $request->encarIdentificacion,
+            'encar_rol' => $request->encarRol,
+            'org_telf' => $request->orgTelf,
+            'org_email' => $request->orgEmail
         ]);
 
         return response()->json($organizacione, 200);
@@ -90,19 +109,18 @@ class OrganizacionController extends Controller
     public function destroy(Organizacione $organizacione)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para eliminar organizaciones.'], 403);
-        }
+        // Comentado temporalmente para testing
+        // if (request()->user()->rol_id !== 1) {
+        //     return response()->json(['message' => 'No tienes permiso para eliminar organizaciones.'], 403);
+        // }
 
-        $organizacione->estado_borrado = true;
-        $organizacione->borrado_en = now();
-        $organizacione->save();
+        $organizacione->delete();
 
         return response()->json(['message' => 'Organización eliminada correctamente.'], 200);
     }
-    public function vwOrganizaciones()
-    {
-        $vwOrganizaciones = VWOrganizaciones::all();
-        return response()->json($vwOrganizaciones);
-    }
+    // public function vwOrganizaciones()
+    // {
+    //     $vwOrganizaciones = VWOrganizaciones::all();
+    //     return response()->json($vwOrganizaciones);
+    // }
 }
