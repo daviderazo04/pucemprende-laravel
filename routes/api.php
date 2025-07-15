@@ -26,6 +26,10 @@ use App\Http\Controllers\EquipoProyectoController;
 use App\Http\Controllers\EventoRolPersonaController;
 use App\Http\Controllers\RolEventoController;
 
+//Para mandar correos a organizaciones
+use App\Http\Controllers\OrganizacionMailController;
+
+
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -130,6 +134,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('procesos-evaluacion', App\Http\Controllers\Api\ProcesosEvaluacionController::class);
     Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
     Route::apiResource('criterios', App\Http\Controllers\Api\CriterioController::class);
+
+    //Para mandar correos a organizaciones
+    Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);
+
 });
 
 
