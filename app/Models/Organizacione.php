@@ -6,46 +6,36 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Organizacione
- * 
+ *
  * @property int $id
- * @property Carbon|null $creado_en
- * @property Carbon|null $actualizado_en
- * @property string $nombre
- * @property string|null $abreviatura
- * 
- * @property Collection|Afiliacione[] $afiliaciones
+ * @property string|null $org_nom
+ * @property string|null $org_abreviatura
+ * @property string|null $encar_nombre
+ * @property string|null $encar_apellido
+ * @property string $encar_identificacion
+ * @property string|null $encar_rol
+ * @property string|null $org_telf
+ * @property string|null $org_email
  *
  * @package App\Models
  */
 class Organizacione extends Model
 {
 	protected $table = 'organizaciones';
-	public $timestamps = false;
-
-	protected $casts = [
-		'creado_en' => 'datetime',
-		'actualizado_en' => 'datetime',
-		'estado_borrado' => 'bool',
-		'borrado_en' => 'datetime'
-	];
+	public $timestamps = false; // La tabla no tiene created_at ni updated_at
 
 	protected $fillable = [
-		'creado_en',
-		'actualizado_en',
-		'nombre',
-		'abreviatura',
-		'estado_borrado', 
-		'borrado_en' 
+		'org_nom',
+		'org_abreviatura',
+		'encar_nombre',
+		'encar_apellido',
+		'encar_identificacion',
+		'encar_rol',
+		'org_telf',
+		'org_email'
 	];
-
-	public function afiliaciones()
-	{
-		return $this->hasMany(Afiliacione::class, 'organizacion_id');
-	}
 }
