@@ -29,6 +29,9 @@ use App\Http\Controllers\RolEventoController;
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
 
+//Para generar QR de proyectos
+use App\Http\Controllers\ProyectoQrController;
+
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -137,6 +140,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //Para mandar correos a organizaciones
     Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);
+
+    //Para generar QR de proyectos
+    Route::get('/proyectos/{id}/qr', [ProyectoQrController::class, 'generarQrProyecto']);
 
 });
 
