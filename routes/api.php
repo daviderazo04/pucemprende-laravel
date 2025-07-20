@@ -118,6 +118,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('equipos-ganadores', EquiposGanadoreController::class);
 
     //Rutas - Evento Rol Persona
+    Route::get('/evento-rol-persona/detalles', [EventoRolPersonaController::class, 'indexConDetalles']);
     Route::apiResource('evento-rol-persona', EventoRolPersonaController::class);
 
     //Rutas - Roles de Evento

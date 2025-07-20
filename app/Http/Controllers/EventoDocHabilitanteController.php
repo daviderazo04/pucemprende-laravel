@@ -34,7 +34,7 @@ class EventoDocHabilitanteController extends Controller
     public function store(Request $request)
     {
         //print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
+        // Solo permitir si el usuario tiene rol_id = 1 (administrador de eventos) o rol_id = 8 (superadministrador)
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ligar un documento habilitante con un evento.'], 403);
         }
