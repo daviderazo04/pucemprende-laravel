@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Persona;
 
 class EventoRolPersonaController extends Controller
 {
@@ -24,18 +25,6 @@ class EventoRolPersonaController extends Controller
 
         if (!$persona) {
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
-        }
-
-        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
-        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
-        $isSystemAdmin = ($request->user()->rol_id == 8);
-        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
-                                        ->exists();
-
-        if (!$isSystemAdmin && !$isEventAuthor) {
-            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
         }
 
         $eventoRolPersona = EventoRolPersona::all();
@@ -59,8 +48,8 @@ class EventoRolPersonaController extends Controller
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
-        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
-        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        // Verificar si el usuario tiene rol_id = 8 (administrador del sistema)
+        // O si la persona es el autor del evento al que está queriando añadir un rol a una persona (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
@@ -106,18 +95,6 @@ class EventoRolPersonaController extends Controller
         if (!$persona) {
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
-
-        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
-        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
-        $isSystemAdmin = ($request->user()->rol_id == 8);
-        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
-                                        ->exists();
-
-        if (!$isSystemAdmin && !$isEventAuthor) {
-            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
-        }
         
         if (!$eventoRolPersona) {
             return response()->json(['message' => 'Rol de persona de evento no encontrado'], 404);
@@ -151,7 +128,7 @@ class EventoRolPersonaController extends Controller
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
-            return response()->json(['message' => 'No tienes permiso para actualizar este elemento.'], 403);
+            return response()->json(['message' => 'No tienes permiso para actualizar este elemento, no eres autor del evento o administrador general.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
