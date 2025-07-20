@@ -186,6 +186,43 @@ class EventoRolPersonaController extends Controller
         return response()->json($resultado);
     }
 
+    public function showConDetalles(Request $request, $id)
+    {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para ver este elemento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $registro = EventoRolPersona::with([
+            'rolEvento:id,nombre',
+            'evento:id,nombre',
+            'persona:id,nombre,apellido,identificacion'
+        ])->find($id);
+
+        if (!$registro) {
+            return response()->json(['message' => 'No se encontró el registro con ID ' . $id], 404);
+        }
+
+        $resultado = [
+            'id' => $registro->id,
+            'evento' => $registro->evento->nombre ?? null,
+            'rol' => $registro->rolEvento->nombre ?? null,
+            'persona' => [
+                'nombre' => $registro->persona->nombre ?? null,
+                'apellido' => $registro->persona->apellido ?? null,
+                'identificacion' => $registro->persona->identificacion ?? null,
+            ],
+        ];
+
+        return response()->json($resultado);
+    }
+
+
 
     /**
      * Remove the specified resource from storage.
