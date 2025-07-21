@@ -65,6 +65,7 @@ class EventoRolPersonaController extends Controller
             'evento_id' => 'required|integer|exists:eventos,id',
             'rol_id' => 'required|integer|exists:rolEvento,id',
             'persona_id' => 'required|integer|exists:personas,id',
+            'estado_borrado' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -75,7 +76,7 @@ class EventoRolPersonaController extends Controller
             'evento_id' => $request->evento_id,
             'rol_id' => $request->rol_id,
             'persona_id' => $request->persona_id,
-            'estado_borrado' => false,
+            'estado_borrado' => $request->estado_borrado,
         ]);
 
         return response()->json($eventoRolPersona, 201);
@@ -267,6 +268,46 @@ class EventoRolPersonaController extends Controller
             return response()->json(['message' => 'Rol de persona de evento marcado como eliminado.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al eliminar el rol de persona de evento.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Vuelve a activar el usuario.
+     */
+    public function activar(Request $request, EventoRolPersona $eventoRolPersona)
+    {
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para activar un rol de persona en un evento.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $evento_id = $eventoRolPersona->evento_id;
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1)
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para activar este usuario.'], 403);
+        }
+
+        // Intenta eliminar el documento
+        try {
+            $eventoRolPersona->estado_borrado = false;
+            $eventoRolPersona->save();
+            return response()->json(['message' => 'Rol de persona de evento activado.']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al activar el rol de persona de evento.', 'error' => $e->getMessage()], 500);
         }
     }
 }
