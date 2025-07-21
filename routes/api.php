@@ -25,7 +25,7 @@ use App\Http\Controllers\EquiposGanadoreController;
 use App\Http\Controllers\EquipoProyectoController;
 use App\Http\Controllers\EventoRolPersonaController;
 use App\Http\Controllers\RolEventoController;
-
+use App\Http\Controllers\PersonaController;
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
 
@@ -147,6 +147,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //Para generar QR de proyectos
     Route::get('/proyectos/{id}/qr', [ProyectoQrController::class, 'generarQrProyecto']);
+
+    // Rutas - Persona
+    Route::get('/persona/cedula/{cedula}', [PersonaController::class, 'getCedula']);
+    Route::apiResource('persona', PersonaController::class)->only(['index', 'show']);
+
 
 });
 
