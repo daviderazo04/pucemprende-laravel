@@ -68,32 +68,46 @@ class PersonaController extends Controller
         return response()->json($persona, 201);
     }
 
+    /**
+     * Muestra una persona específica por su ID
+     *
+     * @param Request $request
+     * @param Persona $persona Modelo de persona obtenido por route model binding
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request, Persona $persona)
     {
-        // Solo permitir si el usuario tiene rol_id = 1 y rol_id = 8
+        // Solo permitir si el usuario tiene rol_id = 1 (admin) o rol_id = 8 (superadmin)
         if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a esta persona.'], 403);
         }
+
+        // Verificar si la persona está marcada como eliminada (soft delete)
         if ($persona->estado_borrado) {
             return response()->json(['message' => 'La persona no existe o ha sido eliminada'], 404);
         }
 
         return response()->json($persona);
     }
+
+     //Busca personas por cédula usando coincidencias parciales
+
     public function getCedula(Request $request, $cedula)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
+        // Solo permitir si el usuario tiene rol_id = 1 (admin) o rol_id = 8 (superadmin)
         if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 1) {
             return response()->json(['message' => 'No tienes permiso para acceder a esta persona.'], 403);
         }
 
-        $persona = Persona::where('identificacion', $cedula)->first();
+        // Ejecutar stored procedure que busca con LIKE %cedula%
+        $personas = DB::select('CALL sp_GetByIdentificacion(?)', [$cedula]);
 
-        if (!$persona) {
-            return response()->json(['message' => 'Persona no encontrada'], 404);
+        // Verificar si se encontraron resultados
+        if (empty($personas)) {
+            return response()->json(['message' => 'No se encontraron personas'], 404);
         }
 
-        return response()->json($persona);
+        return response()->json($personas);
     }
 
     public function update(Request $request, Persona $persona)
