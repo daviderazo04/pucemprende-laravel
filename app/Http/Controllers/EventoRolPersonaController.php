@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Models\Persona;
+use App\Models\Evento;
 
 class EventoRolPersonaController extends Controller
 {
@@ -74,6 +75,7 @@ class EventoRolPersonaController extends Controller
             'evento_id' => $request->evento_id,
             'rol_id' => $request->rol_id,
             'persona_id' => $request->persona_id,
+            'estado_borrado' => false,
         ]);
 
         return response()->json($eventoRolPersona, 201);
@@ -118,6 +120,8 @@ class EventoRolPersonaController extends Controller
         if (!$persona) {
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
+
+        $evento = Evento::find($request->evento_id);
 
         // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
@@ -180,6 +184,7 @@ class EventoRolPersonaController extends Controller
                     'apellido' => $item->persona->apellido ?? null,
                     'identificacion' => $item->persona->identificacion ?? null,
                 ],
+                'estado_borrado' => $item->estado_borrado,
             ];
         });
 
@@ -217,6 +222,7 @@ class EventoRolPersonaController extends Controller
                 'apellido' => $registro->persona->apellido ?? null,
                 'identificacion' => $registro->persona->identificacion ?? null,
             ],
+            'estado_borrado' => $registro->estado_borrado,
         ];
 
         return response()->json($resultado);
@@ -227,7 +233,7 @@ class EventoRolPersonaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(EventoRolPersona $eventoRolPersona)
+    public function destroy(Request $request, EventoRolPersona $eventoRolPersona)
     {
         // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
@@ -240,12 +246,14 @@ class EventoRolPersonaController extends Controller
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
+        $evento_id = $eventoRolPersona->evento_id;
+
         // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
-        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -254,8 +262,9 @@ class EventoRolPersonaController extends Controller
 
         // Intenta eliminar el documento
         try {
-            $eventoRolPersona->delete();
-            return response()->json(['message' => 'Rol de persona de evento eliminado correctamente.']);
+            $eventoRolPersona->estado_borrado = true;
+            $eventoRolPersona->save();
+            return response()->json(['message' => 'Rol de persona de evento marcado como eliminado.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al eliminar el rol de persona de evento.', 'error' => $e->getMessage()], 500);
         }

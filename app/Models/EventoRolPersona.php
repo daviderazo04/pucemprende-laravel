@@ -23,7 +23,13 @@ class EventoRolPersona extends Pivot // Extend Pivot instead of Model
         'evento_id',
         'rol_id',
         'persona_id',
+        'estado_borrado',
     ];
+
+    protected $casts = [
+        'estado_borrado' => 'boolean',
+    ];
+
 
     // Optional: If you ever need to access the related models directly from the pivot instance
     public function evento()
