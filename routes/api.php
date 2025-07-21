@@ -150,8 +150,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas - Persona
     Route::get('/persona/cedula/{cedula}', [PersonaController::class, 'getCedula']);
-    Route::apiResource('persona', PersonaController::class)->only(['index', 'show']);
-
+    Route::apiResource('persona', PersonaController::class);
+    // Rutas - Usuario
+    Route::apiResource('usuario', App\Http\Controllers\UsuarioController::class);
 
 });
 

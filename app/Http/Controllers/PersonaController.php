@@ -31,8 +31,8 @@ class PersonaController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 1 y rol_id = 8 (superadministrador)
+        if ($request->user()->rol_id !== 1 || $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para crear personas.'], 403);
         }
 
@@ -70,15 +70,21 @@ class PersonaController extends Controller
 
     public function show(Persona $persona)
     {
+        // Solo permitir si el usuario tiene rol_id = 1 y rol_id = 8
+        if ($persona->estado_borrado) {
+            return response()->json(['message' => 'La persona no existe o ha sido eliminada'], 404);
+        }
+        if ($persona->user_id !== $request->user()->id || $request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para ver esta persona'], 403);
+        }
         return response()->json($persona);
     }
     public function getCedula(Request $request, $cedula)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        // Comentado temporalmente para testing
-        // if ($request->user()->rol_id !== 1) {
-        //     return response()->json(['message' => 'No tienes permiso para acceder a esta persona.'], 403);
-        // }
+        if ($request->user()->rol_id !== 1 || $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para acceder a esta persona.'], 403);
+        }
 
         $persona = Persona::where('identificacion', $cedula)->first();
 
@@ -92,7 +98,7 @@ class PersonaController extends Controller
     public function update(Request $request, Persona $persona)
     {
         // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 || $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar personas.'], 403);
         }
 
@@ -126,7 +132,7 @@ class PersonaController extends Controller
             return response()->json(['message' => 'La persona ya está eliminada'], 404);
         }
 
-        if (auth()->user()->rol_id !== 1) {
+        if ($request->user()->rol_id !== 1 || $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar personas.'], 403);
         }
 
