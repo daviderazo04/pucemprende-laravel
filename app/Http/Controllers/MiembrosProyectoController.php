@@ -31,9 +31,7 @@ class MiembrosProyectoController extends Controller
      */
     public function store(Request $request)
     {
-        // Admin y usuarios pueden añadir miembros a un proyecto
         $persona = Persona::where('users_id', $request->user()->id)->first();
-
         if (!$persona) {
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
@@ -53,39 +51,35 @@ class MiembrosProyectoController extends Controller
             return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
         }
 
-        $esLider = RolesProyecto::find($request->rol_id);
-        if (!$esLider) {
-            return response()->json(['error' => 'Rol de proyecto no encontrado'], 404);
-        }
-
-        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
-        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        // Permisos
         $isSystemAdmin = ($request->user()->rol_id == 8);
+
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
 
-        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->exists();
+        $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
 
-        
+        $hasPermission = $isSystemAdmin || $isEventAuthor || $isProjectLeader;
 
-        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
-            return response()->json(['message' => 'No tienes permiso para añadir miembros a un proyecto.'], 403);
+        if (!$hasPermission) {
+            return response()->json([
+                'message' => 'No tienes permiso para añadir miembros al proyecto.',
+                'isSystemAdmin' => $isSystemAdmin,
+                'isEventAuthor' => $isEventAuthor,
+                'isProjectLeader' => $isProjectLeader
+            ], 403);
         }
 
-        if($esLider->id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para añadir miembros a un proyecto, no eres el lider.'], 403);
-        }
-
+        // Validación de datos
         $validator = Validator::make($request->all(), [
             'rol_id' => 'required|integer|exists:roles_proyectos,id',
             'proyecto_id' => 'required|integer|exists:proyectos,id',
             'persona_id' => 'required|integer|exists:personas,id',
-            'fecha_inicio' => 'required|date_format:Y-m-d',
-            'fecha_fin' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
         ]);
 
         if ($validator->fails()) {
@@ -95,14 +89,14 @@ class MiembrosProyectoController extends Controller
         $miembrosProyecto = MiembrosProyecto::create([
             'creado_en' => Carbon::now(),
             'actualizado_en' => Carbon::now(),
-            'equipo_id' => $request->equipo_id,
+            'rol_id' => $request->rol_id,
             'persona_id' => $request->persona_id,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
+            'proyecto_id' => $request->proyecto_id,
         ]);
 
         return response()->json($miembrosProyecto, 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -122,9 +116,7 @@ class MiembrosProyectoController extends Controller
      */
     public function update(Request $request, MiembrosProyecto $miembrosProyecto)
     {
-        // Admin y usuarios pueden editar a los miembros del equipo
         $persona = Persona::where('users_id', $request->user()->id)->first();
-
         if (!$persona) {
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
@@ -144,39 +136,35 @@ class MiembrosProyectoController extends Controller
             return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
         }
 
-        $esLider = RolesProyecto::find($request->rol_id);
-        if (!$esLider) {
-            return response()->json(['error' => 'Rol de proyecto no encontrado'], 404);
-        }
-
-        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
-        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        // Permisos
         $isSystemAdmin = ($request->user()->rol_id == 8);
+
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
 
-        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->exists();
+        $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
 
-        
+        $hasPermission = $isSystemAdmin || $isEventAuthor || $isProjectLeader;
 
-        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
-            return response()->json(['message' => 'No tienes permiso para editar miembros a un proyecto.'], 403);
+        if (!$hasPermission) {
+            return response()->json([
+                'message' => 'No tienes permiso para editar miembros del proyecto.',
+                'isSystemAdmin' => $isSystemAdmin,
+                'isEventAuthor' => $isEventAuthor,
+                'isProjectLeader' => $isProjectLeader
+            ], 403);
         }
 
-        if($esLider->id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para editar miembros a un proyecto, no eres el lider.'], 403);
-        }
-
+        // Validación de datos
         $validator = Validator::make($request->all(), [
             'rol_id' => 'required|integer|exists:roles_proyectos,id',
             'proyecto_id' => 'required|integer|exists:proyectos,id',
             'persona_id' => 'required|integer|exists:personas,id',
-            'fecha_inicio' => 'required|date_format:Y-m-d',
-            'fecha_fin' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
         ]);
 
         if ($validator->fails()) {
@@ -186,9 +174,7 @@ class MiembrosProyectoController extends Controller
         $miembrosProyecto->fill($request->only([
             'rol_id',
             'proyecto_id',
-            'persona_id',
-            'fecha_inicio',
-            'fecha_fin'
+            'persona_id'
         ]));
 
         $miembrosProyecto->actualizado_en = Carbon::now();
@@ -196,6 +182,7 @@ class MiembrosProyectoController extends Controller
 
         return response()->json($miembrosProyecto);
     }
+
 
     /**
      * Remove the specified resource from storage.
