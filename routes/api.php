@@ -120,7 +120,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //Rutas - Evento Rol Persona
     Route::get('/evento-rol-persona/detalles', [EventoRolPersonaController::class, 'indexConDetalles']);
     Route::get('/evento-rol-persona/detalles/{id}', [EventoRolPersonaController::class, 'showConDetalles']);
-    Route::patch('/evento-rol-persona/{eventoRolPersona}/borrar', [EventoRolPersonaController::class, 'destroy']);
+    Route::delete('/evento-rol-persona/{eventoRolPersona}/borrar', [EventoRolPersonaController::class, 'destroy']);
     Route::apiResource('evento-rol-persona', EventoRolPersonaController::class);
 
     //Rutas - Roles de Evento
