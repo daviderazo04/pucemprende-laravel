@@ -26,7 +26,7 @@ class MiembrosEquipoController extends Controller
      */
     public function store(Request $request)
     {
-        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
+        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para agregar miembros de equipo.'], 403);
         }
         $validator = \Validator::make($request->all(), [
@@ -61,7 +61,7 @@ class MiembrosEquipoController extends Controller
      */
     public function update(Request $request, MiembrosEquipo $miembrosEquipo)
     {
-        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
+        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar miembros de equipo.'], 403);
         }
         $validator = \Validator::make($request->all(), [
@@ -88,7 +88,7 @@ class MiembrosEquipoController extends Controller
      */
     public function destroy(MiembrosEquipo $miembrosEquipo)
     {
-        if(request()->user()->rol_id !== 1 && request()->user()->rol_id !== 2) {
+        if(request()->user()->rol_id !== 1 && request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar miembros de equipo.'], 403);
         }
         $miembrosEquipo->delete();

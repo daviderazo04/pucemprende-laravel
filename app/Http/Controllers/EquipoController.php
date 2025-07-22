@@ -22,7 +22,7 @@ class EquipoController extends Controller
      */
     public function store(Request $request)
     {
-        if($request->user()->rol_id!=1){
+        if($request->user()->rol_id!=1 && $request->user()->rol_id!=8){
             return response()->json(['message'=>'No tienes permiso para crear equipos'],403);
         }
         $validator = Validator::make($request->all(),[
@@ -30,7 +30,7 @@ class EquipoController extends Controller
             'evento_id'=> 'required|integer|exists:eventos,id',
             'ranking'=> 'nullable|integer',
         ]);
-        
+
         if($validator->fails()){
             return response()->json(['errors'=> $validator->errors()],422);
         }
@@ -60,7 +60,7 @@ class EquipoController extends Controller
      */
     public function update(Request $request, Equipo $equipo)
     {
-        if ($request->user()->rol_id != 1) {
+        if ($request->user()->rol_id != 1 && $request->user()->rol_id != 8) {
             return response()->json(['message' => 'No tienes los permisos suficientes'], 403);
         }
          $validator = Validator::make($request->all(), [
@@ -90,7 +90,7 @@ class EquipoController extends Controller
      */
     public function destroy(Equipo $equipo)
     {
-         if (request()->user()->rol_id !== 1) {
+         if (request()->user()->rol_id !== 1 && request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar equipos.'], 403);
         }
 

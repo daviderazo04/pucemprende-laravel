@@ -19,52 +19,56 @@ class ArchivoController extends Controller
         return response()->json($archivo);
     }
     /**
-     * Handles file storage from frontend.
-     * Stores the file and its URL in the database.
+     * Maneja la subida de archivos desde el frontend.
+     * Almacena el archivo y guarda su URL en la base de datos.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function storeFile(Request $request)
     {
+        // Código comentado de pruebas anteriores
         // Storage::disk('public')->put("texto.txt", "Hola");
-
         // if($req -> isMethod('POST')){
         //     $file = $req->file('file');
         //     $name = $req->input('name');
         //     $file -> storeAs('',$name.".".$file -> extension(),'public');
         // }
-        // Validate the incoming file
+
+        // Validar el archivo recibido
         $request->validate([
-            'file' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // Max 10MB (10240 KB)
-            'name' => 'sometimes|string|max:255',
+            'file' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // Máximo 10MB (10240 KB)
+            'name' => 'sometimes|string|max:255', // Nombre opcional
         ]);
 
         if ($request->hasFile('file')) {
             $uploadedFile = $request->file('file');
 
-            // Generate a unique file name using UUID and its original extension
+            // Generar un nombre único usando UUID y la extensión original
             $originalExtension = $uploadedFile->getClientOriginalExtension();
             $fileName = Str::uuid() . '.' . $originalExtension;
 
             try {
-                // Store the file in the 'uploads' directory within the 'public' disk
-                // This means it will be saved in storage/app/public/uploads/
+                // Almacenar el archivo en el directorio 'uploads' dentro del disco 'public'
+                // Esto significa que se guardará en storage/app/public/uploads/
                 $path = Storage::disk('public')->putFileAs('uploads', $uploadedFile, $fileName);
 
-                // Construct the public URL for the file
-                // This assumes you have run `php artisan storage:link`
+                // Construir la URL pública para el archivo
+                // Esto asume que has ejecutado `php artisan storage:link`
                 $publicUrl = asset('storage/' . $path);
 
-                // Save the file information to your 'archivos' table
+                // Guardar la información del archivo en la tabla 'archivos'
                 $archivo = Archivo::create([
                     'creado_en' => now(),
                     'actualizado_en' => now(),
                     'estado_borrado' => false,
                     'borrado_en' => null,
-                    'url' => $publicUrl, // Store the public URL
-                    'tipo' => $originalExtension // Store the file type (e.g., '.png', '.jpg')
+                    'url' => $publicUrl, // Almacenar la URL pública
+                    'tipo' => $originalExtension // Almacenar el tipo de archivo (ej: '.png', '.jpg')
                 ]);
 
                 return response()->json([
-                    'message' => 'File uploaded and record created successfully!',
+                    'message' => 'Archivo subido y registro creado exitosamente!',
                     'file' => [
                         'id' => $archivo->id,
                         'original_name' => $uploadedFile->getClientOriginalName(),
@@ -73,20 +77,20 @@ class ArchivoController extends Controller
                         'url' => $publicUrl,
                         'tipo' => $archivo->tipo,
                     ]
-                ], 201); // 201 Created
+                ], 201); // 201 Creado
 
             } catch (\Exception $e) {
-                // Log the error for debugging
+                // Registrar el error para depuración
                 return response()->json([
-                    'message' => 'Error uploading file.',
+                    'message' => 'Error al subir el archivo.',
                     'error' => $e->getMessage()
                 ], 500);
             }
         }
 
         return response()->json([
-            'message' => 'No file found in the request.'
-        ], 400); // Bad Request
+            'message' => 'No se encontró archivo en la solicitud.'
+        ], 400); // Solicitud incorrecta
     }
 
     /**
@@ -94,7 +98,8 @@ class ArchivoController extends Controller
      */
     public function store(Request $request)
     {
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para crear archivos.'], 403);
         }
         $validator = Validator::make($request->all(), [
@@ -128,7 +133,8 @@ class ArchivoController extends Controller
      */
     public function update(Request $request, Archivo $archivo)
     {
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar archivos.'], 403);
         }
         $validator = Validator::make($request->all(), [
@@ -151,7 +157,8 @@ class ArchivoController extends Controller
      */
     public function destroy(Archivo $archivo)
     {
-        if (request()->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+        if (request()->user()->rol_id !== 1 && request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar archivos.'], 403);
         }
         $archivo->update([

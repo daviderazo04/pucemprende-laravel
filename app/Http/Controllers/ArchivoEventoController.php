@@ -22,8 +22,8 @@ class ArchivoEventoController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para crear archivos de eventos.'], 403);
         }
 
@@ -75,8 +75,8 @@ class ArchivoEventoController extends Controller
      */
     public function update(Request $request, ArchivoEvento $archivoEvento)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar archivos de eventos.'], 403);
         }
 
@@ -102,8 +102,8 @@ class ArchivoEventoController extends Controller
     public function destroy($id)
     {
         $archivoEvento = ArchivoEvento::find($id);
-        // Solo permitir si el usuario tiene rol_id = 1
-        if (request()->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+        if (request()->user()->rol_id !== 1 && request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar archivos de eventos.'], 403);
         }
 

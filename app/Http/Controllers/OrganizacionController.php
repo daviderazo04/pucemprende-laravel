@@ -22,8 +22,8 @@ class OrganizacionController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-         if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
              return response()->json(['message' => 'No tienes permiso para crear organizaciones.'], 403);
         }
 
@@ -69,8 +69,8 @@ class OrganizacionController extends Controller
      */
     public function update(Request $request, Organizacione $organizacione)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-         if ($request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario es admin o superadmin
+         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
              return response()->json(['message' => 'No tienes permiso para actualizar organizaciones.'], 403);
      }
 
@@ -108,11 +108,10 @@ class OrganizacionController extends Controller
      */
     public function destroy(Organizacione $organizacione)
     {
-        // Solo permitir si el usuario tiene rol_id = 1
-        // Comentado temporalmente para testing
-        // if (request()->user()->rol_id !== 1) {
-        //     return response()->json(['message' => 'No tienes permiso para eliminar organizaciones.'], 403);
-        // }
+        // Solo permitir si el usuario es admin o superadmin
+        if (request()->user()->rol_id !== 1 && request()->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para eliminar organizaciones.'], 403);
+        }
 
         $organizacione->delete();
 
