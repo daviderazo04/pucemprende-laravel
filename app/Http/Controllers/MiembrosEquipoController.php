@@ -46,6 +46,7 @@ class MiembrosEquipoController extends Controller
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_fin' => $request->fecha_fin
         ]);
+        return response()->json("Miembro del equipo agregado correctamente", 200);
     }
 
     /**
