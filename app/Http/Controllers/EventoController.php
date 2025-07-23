@@ -345,14 +345,26 @@ class EventoController extends Controller
 
     public function destroy(Evento $evento)
     {
-        if (request()->user()->rol_id !== 1) {
-            return response()->json(['message' => 'No tienes permiso para eliminar eventos.'], 403);
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para actualizar eventos.'], 403);
         }
 
-        $persona = Persona::where('users_id', request()->user()->id)->first();
+        $persona = Persona::where('users_id', $request->user()->id)->first();
 
-        if (!$persona /*|| $evento->autor != $persona->id*/) {
-            return response()->json(['message' => 'No tienes permiso para eliminar este evento.'], 403);
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
+        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+                                        ->where('persona_id', $persona->id)
+                                        ->where('rol_id', 1) 
+                                        ->exists();
+
+        if (!$isSystemAdmin && !$isEventAuthor) {
+            return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
         }
 
         $evento->estado_borrado = true;
