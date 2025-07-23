@@ -7,6 +7,8 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Persona;
+use App\Models\EventoRolPersona;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -35,10 +37,27 @@ class AuthenticatedSessionController extends Controller
         // Crear token con Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Obtener persona asociada al usuario
+        $persona = Persona::where('users_id', $user->id)->first();
+
+        $eventos = [];
+        if ($persona) {
+            $eventos = EventoRolPersona::where('persona_id', $persona->id)
+                ->whereIn('rol_id', [1, 5])
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'evento_id' => $item->evento_id,
+                        'rol_id' => $item->rol_id,
+                    ];
+                });
+        }
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
+            'eventos' => $eventos,
         ]);
     }
 
