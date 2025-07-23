@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Archivo;
+use App\Models\Evento;
+use App\Models\EventoRolPersona;
+use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -34,15 +37,36 @@ class ArchivoController extends Controller
         //     $name = $req->input('name');
         //     $file -> storeAs('',$name.".".$file -> extension(),'public');
         // }
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()-> rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para crear archivos.'], 403);
-        }
         // Validar el archivo recibido
         $request->validate([
             'file' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // Máximo 10MB (10240 KB)
             'name' => 'sometimes|string|max:255', // Nombre opcional
+            'evento_id' => 'required|integer|exists:eventos,id',
         ]);
+
+          // Obtener la persona logueada
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada'], 404);
+        }
+
+        // Obtener el evento del request
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si la persona es admin del evento
+        $esAutorEvento = EventoRolPersona::where('evento_id', $evento->id)
+                                         ->where('persona_id', $persona->id)
+                                         ->where('rol_id', 1)
+                                         ->exists();
+
+        // Solo permitir si el usuario es superadmin o autor del evento
+        if ( $request->user()->rol_id !== 8 && !$esAutorEvento) {
+            return response()->json(['message' => 'No tienes permiso para subir archivos.'], 403);
+        }
+
 
         if ($request->hasFile('file')) {
             $uploadedFile = $request->file('file');
