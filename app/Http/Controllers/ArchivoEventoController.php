@@ -103,7 +103,7 @@ class ArchivoEventoController extends Controller
     {
         $archivoEvento = ArchivoEvento::find($id);
         // Solo permitir si el usuario es admin o superadmin
-        if (request()->user()->rol_id !== 1 && request()->user()->rol_id !== 8) {
+        if ($request()->user()->rol_id !== 1 && $request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar archivos de eventos.'], 403);
         }
 

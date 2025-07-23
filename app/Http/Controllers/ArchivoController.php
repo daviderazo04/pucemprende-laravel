@@ -34,7 +34,10 @@ class ArchivoController extends Controller
         //     $name = $req->input('name');
         //     $file -> storeAs('',$name.".".$file -> extension(),'public');
         // }
-
+        // Solo permitir si el usuario es admin o superadmin
+        if ($request->user()-> rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para crear archivos.'], 403);
+        }
         // Validar el archivo recibido
         $request->validate([
             'file' => 'required|file|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10240', // Máximo 10MB (10240 KB)
