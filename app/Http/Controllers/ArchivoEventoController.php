@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\ArchivoEvento;
+use App\Models\Evento;
+use App\Models\Persona;
+use App\Models\EventoRolPersona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,11 +25,7 @@ class ArchivoEventoController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para crear archivos de eventos.'], 403);
-        }
-
+        // Validar los datos
         $validator = \Validator::make($request->all(), [
             'archivo_id' => 'required|integer|exists:archivo,id',
             'evento_id' => 'required|integer|exists:eventos,id',
@@ -34,6 +33,29 @@ class ArchivoEventoController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Obtener la persona logueada
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada'], 404);
+        }
+
+        // Obtener el evento del request
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si la persona es admin del evento
+        $esAutorEvento = EventoRolPersona::where('evento_id', $evento->id)
+                                         ->where('persona_id', $persona->id)
+                                         ->where('rol_id', 1)
+                                         ->exists();
+
+        // Solo permitir si el usuario es superadmin, o admin del evento
+        if ($request->user()->rol_id !== 8 && !$esAutorEvento) {
+            return response()->json(['message' => 'No tienes permiso para crear archivos en este evento.'], 403);
         }
 
         $archivoEvento = ArchivoEvento::create([
@@ -75,11 +97,7 @@ class ArchivoEventoController extends Controller
      */
     public function update(Request $request, ArchivoEvento $archivoEvento)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para actualizar archivos de eventos.'], 403);
-        }
-
+        // Validar datos
         $validator = \Validator::make($request->all(), [
             'archivo_id' => 'required|integer|exists:archivo,id',
             'evento_id' => 'required|integer|exists:eventos,id',
@@ -87,6 +105,29 @@ class ArchivoEventoController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Obtener la persona logueada
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada'], 404);
+        }
+
+        // Obtener el evento del archivo actual
+        $evento = Evento::find($archivoEvento->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si la persona es admin del evento
+        $esAutorEvento = EventoRolPersona::where('evento_id', $evento->id)
+                                         ->where('persona_id', $persona->id)
+                                         ->where('rol_id', 1)
+                                         ->exists();
+
+        // Solo permitir si el usuario es superadmin o admin del evento
+        if ($request->user()->rol_id !== 8 && !$esAutorEvento) {
+            return response()->json(['message' => 'No tienes permiso para actualizar archivos en este evento.'], 403);
         }
 
         $archivoEvento->archivo_id = $request->archivo_id;
@@ -99,12 +140,34 @@ class ArchivoEventoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $archivoEvento = ArchivoEvento::find($id);
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request()->user()->rol_id !== 1 && $request()->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para eliminar archivos de eventos.'], 403);
+        if (!$archivoEvento) {
+            return response()->json(['error' => 'Archivo de evento no encontrado'], 404);
+        }
+
+        // Obtener la persona logueada
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada'], 404);
+        }
+
+        // Obtener el evento del archivo
+        $evento = Evento::find($archivoEvento->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si la persona es admin del evento
+        $esAutorEvento = EventoRolPersona::where('evento_id', $evento->id)
+                                         ->where('persona_id', $persona->id)
+                                         ->where('rol_id', 1)
+                                         ->exists();
+
+        // Solo permitir si el usuario es superadmin o admin del evento
+        if ($request->user()->rol_id !== 8 && !$esAutorEvento) {
+            return response()->json(['message' => 'No tienes permiso para eliminar archivos en este evento.'], 403);
         }
 
         $archivoEvento->delete();
