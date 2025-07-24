@@ -8,6 +8,8 @@ use App\Models\Proyecto;
 use App\Models\Equipo;
 use App\Models\Persona;
 use App\Models\EventoRolPersona;
+use App\Models\Evento;
+use App\Models\MiembrosProyecto;
 
 class ArchivoProyectoController extends Controller
 {
