@@ -16,6 +16,42 @@ class ArchivoProyectoController extends Controller
      */
     public function index()
     {
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::find($request->proyecto_id);
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        $equipo = Equipo::find($proyecto->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        // Permisos
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
+
+        $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
+        $isProjectMember = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->exists();
+        // Verificar permisos
+        if($request->user()->rol_id != 8 && !$isEventAuthor && !$isProjectLeader && !$isProjectMember) {
+            return response()->json(['message' => 'No tienes permiso para ver los archivos de este proyecto.'], 403);
+        }
+
         $archivosProyectos = ArchivoProyecto::all();
         return response()->json($archivosProyectos);
     }
@@ -91,6 +127,40 @@ class ArchivoProyectoController extends Controller
      */
     public function show(ArchivoProyecto $archivoProyecto)
     {
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::find($request->proyecto_id);
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        $equipo = Equipo::find($proyecto->equipo_id);
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+        // Permisos
+        $isSystemAdmin = ($request->user()->rol_id == 8);
+
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
+
+        $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
+        $isProjectMember = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->exists();
+        if($request->user()->rol_id != 8 && !$isEventAuthor && !$isProjectLeader && !$isProjectMember) {
+            return response()->json(['message' => 'No tienes permiso para ver los archivos de este proyecto.'], 403);
+        }
         return response()->json($archivoProyecto);
     }
 
