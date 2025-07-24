@@ -161,7 +161,7 @@ class ArchivoProyectoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ArchivoProyecto $archivoProyecto)
+    public function destroy(Request $request, ArchivoProyecto $archivoProyecto)
     {
         $persona = Persona::where('users_id', $request->user()->id)->first();
         if (!$persona) {
