@@ -343,7 +343,7 @@ class EventoController extends Controller
         return response()->json($evento);
     }
 
-    public function destroy(Evento $evento)
+    public function destroy(Request $request, Evento $evento)
     {
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar eventos.'], 403);
