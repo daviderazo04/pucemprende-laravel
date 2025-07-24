@@ -66,10 +66,7 @@ class ProyectoController extends Controller
         $validator = Validator::make($request->all(), [
             'equipo_id' => 'nullable|integer|exists:equipos,id',
             'titulo' => 'required|string|max:50',
-            'descripcion' => 'required|string|max:1000',
-            'estado' => 'required|string|max:20',
-            'fecha_inicio' => 'required|date_format:Y-m-d',
-            'fecha_fin' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
+            'descripcion' => 'required|string|max:1000'
         ]);
 
         if ($validator->fails()) {
@@ -82,10 +79,11 @@ class ProyectoController extends Controller
             'equipo_id' => $request->equipo_id,
             'titulo' => $request->titulo,
             'descripcion' => $request->descripcion,
-            'estado' => $request->estado,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
+            'estado' => 'ACTIVO',
+            'fecha_inicio' => $evento->fecha_inicio,
+            'fecha_fin' => $evento->fecha_fin,
         ]);
+        
 
         $miembrosProyecto = MiembrosProyecto::create([
             'creado_en' => Carbon::now(),
@@ -155,8 +153,6 @@ class ProyectoController extends Controller
             'titulo' => 'required|string|max:50',
             'descripcion' => 'required|string|max:1000',
             'estado' => 'required|string|max:20',
-            'fecha_inicio' => 'required|date_format:Y-m-d',
-            'fecha_fin' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
         ]);
 
         if ($validator->fails()) {
@@ -167,11 +163,9 @@ class ProyectoController extends Controller
             'equipo_id',
             'titulo',
             'descripcion',
-            'estado',
-            'fecha_inicio',
-            'fecha_fin'
+            'estado'
         ]));
-
+        
         $proyecto->actualizado_en = Carbon::now();
         $proyecto->save();
 
