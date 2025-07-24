@@ -13,7 +13,8 @@ class ProcesosEvaluacionController extends Controller
      */
     public function index()
     {
-        return ProcesosEvaluacion::all();
+        $procesos = ProcesosEvaluacion::with('evento')->get();
+        return response()->json($procesos);
     }
 
     /**
@@ -21,7 +22,17 @@ class ProcesosEvaluacionController extends Controller
      */
     public function store(Request $request)
     {
-        $proceso = ProcesosEvaluacion::create($request->all());
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:255',
+            'evento_id' => 'nullable|integer|exists:eventos,id',
+        ]);
+
+        $proceso = ProcesosEvaluacion::create([
+            'titulo' => $validated['titulo'],
+            'evento_id' => $validated['evento_id'] ?? null,
+            'creado_en' => now(),
+            'actualizado_en' => now(),
+        ]);
         return response()->json($proceso, 201);
     }
 
@@ -30,7 +41,11 @@ class ProcesosEvaluacionController extends Controller
      */
     public function show($id)
     {
-        return ProcesosEvaluacion::findOrFail($id);
+        $proceso = ProcesosEvaluacion::with('evento')->find($id);
+        if (!$proceso) {
+            return response()->json(['message' => 'Proceso de evaluación no encontrado'], 404);
+        }
+        return response()->json($proceso);
     }
 
     /**
@@ -38,9 +53,20 @@ class ProcesosEvaluacionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $proceso = ProcesosEvaluacion::findOrFail($id);
-        $proceso->update($request->all());
-        return response()->json($proceso, 200);
+        $proceso = ProcesosEvaluacion::find($id);
+        if (!$proceso) {
+            return response()->json(['message' => 'Proceso de evaluación no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'titulo' => 'sometimes|required|string|max:255',
+            'evento_id' => 'nullable|integer|exists:eventos,id',
+        ]);
+
+        $proceso->fill($validated);
+        $proceso->actualizado_en = now();
+        $proceso->save();
+        return response()->json($proceso);
     }
 
     /**
@@ -48,7 +74,11 @@ class ProcesosEvaluacionController extends Controller
      */
     public function destroy($id)
     {
-        ProcesosEvaluacion::destroy($id);
-        return response()->json(null, 204);
+        $proceso = ProcesosEvaluacion::find($id);
+        if (!$proceso) {
+            return response()->json(['message' => 'Proceso de evaluación no encontrado'], 404);
+        }
+        $proceso->delete();
+        return response()->json(['message' => 'Proceso de evaluación eliminado correctamente.'], 200);
     }
 }

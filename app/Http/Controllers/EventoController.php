@@ -279,7 +279,7 @@ class EventoController extends Controller
                     "espacio" => $row->evento_espacio,
                     "modalidad" => $row->evento_modalidad,
                     "sede_id" => $row->evento_sede_id,
-                    "categoria_id" => $row->evento_categoria_id, // Mantén categoria_id
+                    "categoria_id" => $row->evento_categoria_id,
                     "hayEquipos" => (int)$row->evento_hayEquipos,
                     "hayFormulario" => (bool)$row->evento_hayFormulario,
                     "estado" => $row->evento_estado,

@@ -13,7 +13,8 @@ class PlantillasEvaluacionController extends Controller
      */
     public function index()
     {
-        return PlantillasEvaluacion::all();
+        $plantillas = PlantillasEvaluacion::with(['procesos_evaluacion'])->get();
+        return response()->json($plantillas);
     }
 
     /**
@@ -21,7 +22,19 @@ class PlantillasEvaluacionController extends Controller
      */
     public function store(Request $request)
     {
-        $plantilla = PlantillasEvaluacion::create($request->all());
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'proceso_id' => 'nullable|integer|exists:procesos_evaluacion,id',
+            'peso' => 'nullable|numeric',
+        ]);
+
+        $plantilla = PlantillasEvaluacion::create([
+            'nombre' => $validated['nombre'],
+            'proceso_id' => $validated['proceso_id'] ?? null,
+            'peso' => $validated['peso'] ?? null,
+            'creado_en' => now(),
+            'actualizado_en' => now(),
+        ]);
         return response()->json($plantilla, 201);
     }
 
@@ -30,7 +43,11 @@ class PlantillasEvaluacionController extends Controller
      */
     public function show($id)
     {
-        return PlantillasEvaluacion::findOrFail($id);
+        $plantilla = PlantillasEvaluacion::with(['procesos_evaluacion', 'criterios', 'roles_plantillas'])->find($id);
+        if (!$plantilla) {
+            return response()->json(['message' => 'Plantilla de evaluación no encontrada'], 404);
+        }
+        return response()->json($plantilla);
     }
 
     /**
@@ -38,9 +55,21 @@ class PlantillasEvaluacionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $plantilla = PlantillasEvaluacion::findOrFail($id);
-        $plantilla->update($request->all());
-        return response()->json($plantilla, 200);
+        $plantilla = PlantillasEvaluacion::find($id);
+        if (!$plantilla) {
+            return response()->json(['message' => 'Plantilla de evaluación no encontrada'], 404);
+        }
+
+        $validated = $request->validate([
+            'nombre' => 'sometimes|required|string|max:255',
+            'proceso_id' => 'nullable|integer|exists:procesos_evaluacion,id',
+            'peso' => 'nullable|numeric',
+        ]);
+
+        $plantilla->fill($validated);
+        $plantilla->actualizado_en = now();
+        $plantilla->save();
+        return response()->json($plantilla);
     }
 
     /**
@@ -48,7 +77,11 @@ class PlantillasEvaluacionController extends Controller
      */
     public function destroy($id)
     {
-        PlantillasEvaluacion::destroy($id);
-        return response()->json(null, 204);
+        $plantilla = PlantillasEvaluacion::find($id);
+        if (!$plantilla) {
+            return response()->json(['message' => 'Plantilla de evaluación no encontrada'], 404);
+        }
+        $plantilla->delete();
+        return response()->json(['message' => 'Plantilla de evaluación eliminada correctamente.'], 200);
     }
 }

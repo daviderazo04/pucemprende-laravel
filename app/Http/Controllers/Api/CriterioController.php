@@ -13,7 +13,8 @@ class CriterioController extends Controller
      */
     public function index()
     {
-        return Criterio::all();
+        $criterios = Criterio::with(['plantillas_evaluacion', 'resultados_evaluacions'])->get();
+        return response()->json($criterios);
     }
 
     /**
@@ -21,7 +22,21 @@ class CriterioController extends Controller
      */
     public function store(Request $request)
     {
-        $criterio = Criterio::create($request->all());
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'plantilla_id' => 'nullable|integer|exists:plantillas_evaluacion,id',
+            'peso' => 'nullable|numeric',
+        ]);
+
+        $criterio = Criterio::create([
+            'nombre' => $validated['nombre'],
+            'descripcion' => $validated['descripcion'] ?? null,
+            'plantilla_id' => $validated['plantilla_id'] ?? null,
+            'peso' => $validated['peso'] ?? null,
+            'creado_en' => now(),
+            'actualizado_en' => now(),
+        ]);
         return response()->json($criterio, 201);
     }
 
@@ -30,7 +45,11 @@ class CriterioController extends Controller
      */
     public function show($id)
     {
-        return Criterio::findOrFail($id);
+        $criterio = Criterio::with(['plantillas_evaluacion', 'resultados_evaluacions'])->find($id);
+        if (!$criterio) {
+            return response()->json(['message' => 'Criterio no encontrado'], 404);
+        }
+        return response()->json($criterio);
     }
 
     /**
@@ -38,9 +57,22 @@ class CriterioController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $criterio = Criterio::findOrFail($id);
-        $criterio->update($request->all());
-        return response()->json($criterio, 200);
+        $criterio = Criterio::find($id);
+        if (!$criterio) {
+            return response()->json(['message' => 'Criterio no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'nombre' => 'sometimes|required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'plantilla_id' => 'nullable|integer|exists:plantillas_evaluacion,id',
+            'peso' => 'nullable|numeric',
+        ]);
+
+        $criterio->fill($validated);
+        $criterio->actualizado_en = now();
+        $criterio->save();
+        return response()->json($criterio);
     }
 
     /**
@@ -48,7 +80,11 @@ class CriterioController extends Controller
      */
     public function destroy($id)
     {
-        Criterio::destroy($id);
-        return response()->json(null, 204);
+        $criterio = Criterio::find($id);
+        if (!$criterio) {
+            return response()->json(['message' => 'Criterio no encontrado'], 404);
+        }
+        $criterio->delete();
+        return response()->json(['message' => 'Criterio eliminado correctamente.'], 200);
     }
 }
