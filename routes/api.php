@@ -35,6 +35,9 @@ use App\Http\Controllers\OrganizacionMailController;
 //Para generar QR de proyectos
 use App\Http\Controllers\ProyectoQrController;
 
+// Rutas públicas (sin autenticación)
+Route::get('/eventos/ultimos', [EventoController::class, 'getUltimosEventos']);
+Route::get('/eventos/proximos', [EventoController::class, 'getProximosEventos']);
 
 // Ruta protegida para obtener usuario logueado
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {

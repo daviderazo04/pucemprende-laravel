@@ -15,7 +15,8 @@ class EventoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
+        // Aplicar autenticación a todos los métodos excepto getUltimosEventos
+        $this->middleware('auth:sanctum')->except(['getUltimosEventos', 'getProximosEventos']);
     }
 
     public function index()
@@ -167,6 +168,16 @@ class EventoController extends Controller
         unset($eventoArray['categoria_id'], $eventoArray['categorium']);
         return response()->json($eventoArray);
     }
+    public function getUltimosEventos()
+    {
+        $eventos = DB::select('SELECT * FROM vw_ultimos_eventos');
+        return response()->json($eventos);
+    }
+    public function getProximosEventos()
+    {
+        $eventos = DB::select('SELECT * FROM vw_proximos_eventos');
+        return response()->json($eventos);
+    }
 
     public function update(Request $request, Evento $evento)
     {
@@ -185,7 +196,7 @@ class EventoController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -360,7 +371,7 @@ class EventoController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
