@@ -27,6 +27,8 @@ use App\Http\Controllers\EventoRolPersonaController;
 use App\Http\Controllers\RolEventoController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RolesController;
+
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
 
@@ -97,6 +99,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas - Archivos de Proyecto
     Route::apiResource('archivos-proyecto', ArchivoProyectoController::class);
+
+    // Rutas - Roles generales del sistema
+    Route::apiResource('rol', RolesController::class);
 
     // Rutas - Archivos de Evento
     Route::get('archivos-evento/evento/{evento_id}', [ArchivoEventoController::class, 'getByEventoURL']);
