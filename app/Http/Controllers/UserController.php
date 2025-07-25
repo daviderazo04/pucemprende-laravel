@@ -21,7 +21,7 @@ class UserController extends Controller
             return response()->json(['message' => 'No tienes permiso para ver usuarios.'], 403);
         }
 
-        $users = User::all();
+        $users = DB::select('SELECT * FROM vw_users');
         return response()->json($users);
     }
     // función para crear un nuevo usuario
