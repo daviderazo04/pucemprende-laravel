@@ -96,7 +96,7 @@ class UserController extends Controller
 
         $validator = Validator::make($request->all(), [
             'usuario' => 'sometimes|required|string|max:100',
-            'clave'=> 'sometimes|required|string|min:100',
+            'clave'=> 'sometimes|required|string|min:8',
             'email' => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
             'rol_id' => 'sometimes|required|exists:roles,id',
             'estado'=> 'sometimes|required|string|in:activo,inactivo',
@@ -106,7 +106,7 @@ class UserController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Usar el mismo enfoque que funciona en Equipo
+        // Actualizar los campos del usuario
         $user->fill($request->only([
             'usuario',
             'email',
