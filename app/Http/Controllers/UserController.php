@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Persona;
 
 class UserController extends Controller
 {
@@ -20,8 +21,7 @@ class UserController extends Controller
             return response()->json(['message' => 'No tienes permiso para ver usuarios.'], 403);
         }
 
-        // Llamar a la vista de la base de datos
-        $users = DB::select('SELECT * FROM vw_users');
+        $users = User::all();
         return response()->json($users);
     }
     // función para crear un nuevo usuario
@@ -53,6 +53,7 @@ class UserController extends Controller
             'creado_en' => Carbon::now(),
             'actualizado_en' => Carbon::now(),
             'remember_token' => null,
+            'estado_borrado' => false,
         ]);
 
         return response()->json($user, 201);
@@ -137,7 +138,23 @@ class UserController extends Controller
             return response()->json(['message' => 'Usuario no encontrado.'], 404);
         }
 
-        $user->delete();
+        if ($user->estado_borrado) {
+            return response()->json(['message' => 'El usuario ya está eliminado'], 404);
+        }
+
+        $persona = Persona::where('users_id', $id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $persona->estado_borrado = true;
+        $persona->borrado_en = Carbon::now();
+        $persona->save();
+
+        $user->estado_borrado = true;
+        $user->save();
+
         return response()->json(['message' => 'Usuario eliminado correctamente.'], 200);
     }
 }

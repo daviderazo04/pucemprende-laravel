@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 
 class PersonaController extends Controller
 {
@@ -150,6 +151,14 @@ class PersonaController extends Controller
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar personas.'], 403);
         }
+
+        $user = User::find($persona->users_id);
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado.'], 404);
+        }
+
+        $user->estado_borrado = true;
+        $user->save();
 
         $persona->estado_borrado = true;
         $persona->borrado_en = Carbon::now();

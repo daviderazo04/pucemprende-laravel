@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Hash;
  * @property Carbon $creado_en
  * @property Carbon $actualizado_en
  * @property string|null $remember_token
+ * @property bool $estado_borrado
  *
  * @property Role|null $role
  * @property Collection|Persona[] $personas
@@ -44,7 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'rol_id' => 'int',
         'creado_en' => 'datetime',
-        'actualizado_en' => 'datetime'
+        'actualizado_en' => 'datetime',
+        'estado_borrado' => 'bool'
     ];
 
     protected $hidden = [
@@ -61,7 +63,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'estado',
         'creado_en',
         'actualizado_en',
-        'remember_token'
+        'remember_token',
+        'estado_borrado'
     ];
 
     public function role()
