@@ -26,6 +26,7 @@ use App\Http\Controllers\EquipoProyectoController;
 use App\Http\Controllers\EventoRolPersonaController;
 use App\Http\Controllers\RolEventoController;
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\UserController;
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
 
@@ -152,7 +153,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/persona/cedula/{cedula}', [PersonaController::class, 'getCedula']);
     Route::apiResource('persona', PersonaController::class);
     // Rutas - Usuario
-    Route::apiResource('usuario', App\Http\Controllers\UsuarioController::class);
+    Route::apiResource('usuario', App\Http\Controllers\UserController::class);
 
 });
 
