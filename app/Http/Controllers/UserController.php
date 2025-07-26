@@ -100,6 +100,7 @@ class UserController extends Controller
             'email' => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
             'rol_id' => 'sometimes|required|exists:roles,id',
             'estado'=> 'sometimes|required|string|in:activo,inactivo',
+            'estado_borrado' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -111,7 +112,8 @@ class UserController extends Controller
             'usuario',
             'email',
             'rol_id',
-            'estado'
+            'estado',
+            'estado_borrado'
         ]));
 
         // Manejar la contraseña por separado si se proporciona
