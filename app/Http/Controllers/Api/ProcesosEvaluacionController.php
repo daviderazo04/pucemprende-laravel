@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\ProcesosEvaluacion;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class ProcesosEvaluacionController extends Controller
 {
@@ -81,4 +82,182 @@ class ProcesosEvaluacionController extends Controller
         $proceso->delete();
         return response()->json(['message' => 'Proceso de evaluación eliminado correctamente.'], 200);
     }
+
+    /**
+     * Retrieves all evaluation processes with their nested templates and criteria.
+     * Calls SP_ObtenerProcesosEvaluacionDetalle().
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProcesosEvaluacionDetalle()
+    {
+        try {
+            // Llama al Stored Procedure para obtener todos los procesos con sus plantillas y criterios anidados.
+            // El resultado del SP es un JSON string en la columna 'plantillas'.
+            $result = DB::select('CALL SP_ObtenerProcesosEvaluacionDetalle()');
+
+            // Procesar el resultado para decodificar el JSON de 'plantillas'
+            $procesos = collect($result)->map(function ($proceso) {
+                // Decodificar la columna 'plantillas' que viene como JSON string
+                // Si 'plantillas' es null o vacío, json_decode devolverá null, lo cual es manejado
+                $proceso->plantillas = $proceso->plantillas ? json_decode($proceso->plantillas, true) : [];
+
+                // Asegurarse de que las propiedades del proceso tengan nombres camelCase para consistencia con JSON
+                $formattedProceso = [
+                    'procesoId' => $proceso->procesoId,
+                    'procesoTitulo' => $proceso->procesoTitulo,
+                    'procesoCreadoEn' => $proceso->procesoCreadoEn,
+                    'procesoActualizadoEn' => $proceso->procesoActualizadoEn,
+                    'procesoEventoId' => $proceso->procesoEventoId,
+                    'plantillas' => collect($proceso->plantillas)->map(function ($plantilla) {
+                        // Formatear los nombres de las propiedades de la plantilla a camelCase
+                        $formattedPlantilla = [
+                            'plantillaId' => $plantilla['plantillaId'],
+                            'plantillaNombre' => $plantilla['plantillaNombre'],
+                            'plantillaCreadoEn' => $plantilla['plantillaCreadoEn'],
+                            'plantillaActualizadoEn' => $plantilla['plantillaActualizadoEn'],
+                            // Decodificar la columna 'criterios' que viene como JSON string
+                            // Asegurarse de que 'criterios' existe y no es nulo antes de decodificar
+                            'criterios' => (isset($plantilla['criterios']) && is_string($plantilla['criterios']) && $plantilla['criterios'])
+    ? json_decode($plantilla['criterios'], true)
+    : (is_array($plantilla['criterios']) ? $plantilla['criterios'] : []),
+                        ];
+                        // Mapear los criterios internos para camelCase
+                        $formattedPlantilla['criterios'] = collect($formattedPlantilla['criterios'])->map(function ($criterio) {
+                            return [
+                                'criterioId' => $criterio['criterioId'],
+                                'criterioNombre' => $criterio['criterioNombre'],
+                                'criterioDescripcion' => $criterio['criterioDescripcion'],
+                                'criterioPeso' => $criterio['criterioPeso'],
+                                'criterioCreadoEn' => $criterio['criterioCreadoEn'],
+                                'criterioActualizadoEn' => $criterio['criterioActualizadoEn'],
+                            ];
+                        })->all(); // Convertir la colección de criterios de vuelta a un array
+                        return $formattedPlantilla;
+                    })->all(), // Convertir la colección de plantillas de vuelta a un array
+                ];
+                return $formattedProceso;
+            });
+
+            return response()->json($procesos);
+
+        } catch (\Exception $e) {
+            // Manejo de errores en caso de que el SP falle o haya un problema con la base de datos
+            return response()->json(['message' => 'Error al obtener los procesos de evaluación: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Store a new evaluation template with its criteria.
+     * Calls SP_CrearPlantillaYCriterios().
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storePlantillaYCriterios(Request $request)
+    {
+        $validated = $request->validate([
+            'proceso_id' => 'required|integer|exists:procesos_evaluacion,id',
+            'nombre_plantilla' => 'required|string|max:100',
+            'criterios' => 'nullable|array',
+            'criterios.*.nombre' => 'required_with:criterios|string|max:100',
+            'criterios.*.descripcion' => 'nullable|string',
+            'criterios.*.peso' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            // Convertir el array de criterios a JSON string para pasarlo al SP
+            $criteriosJson = json_encode($validated['criterios'] ?? []);
+
+            // Llama al Stored Procedure
+            $result = DB::select(
+                'CALL SP_CrearPlantillaYCriterios(?, ?, ?)',
+                [
+                    $validated['proceso_id'],
+                    $validated['nombre_plantilla'],
+                    $criteriosJson
+                ]
+            );
+
+            // El SP devuelve la plantilla recién creada.
+            // Si el SP devuelve una fila, toma la primera.
+            $plantillaCreada = count($result) > 0 ? $result[0] : null;
+
+            // Opcional: Formatear las claves a camelCase para la respuesta JSON
+            if ($plantillaCreada) {
+                $plantillaCreada = [
+                    'plantillaId' => $plantillaCreada->plantillaId,
+                    'plantillaNombre' => $plantillaCreada->plantillaNombre,
+                    'procesoId' => $plantillaCreada->procesoId,
+                    'creadoEn' => $plantillaCreada->creadoEn,
+                    'actualizadoEn' => $plantillaCreada->actualizadoEn,
+                ];
+            }
+
+            return response()->json($plantillaCreada, 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al crear la plantilla y criterios: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update an existing evaluation template and its criteria.
+     * Calls SP_ActualizarPlantillaYCriterios().
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $plantillaId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updatePlantillaYCriterios(Request $request, $plantillaId)
+    {
+        $validated = $request->validate([
+            'nombre_plantilla' => 'required|string|max:100',
+            'criterios' => 'nullable|array',
+            'criterios.*.nombre' => 'required_with:criterios|string|max:100',
+            'criterios.*.descripcion' => 'nullable|string',
+            'criterios.*.peso' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            // Convertir el array de criterios a JSON string para pasarlo al SP
+            $criteriosJson = json_encode($validated['criterios'] ?? []);
+
+            // Llama al Stored Procedure
+            $result = DB::select(
+                'CALL SP_ActualizarPlantillaYCriterios(?, ?, ?)',
+                [
+                    $plantillaId,
+                    $validated['nombre_plantilla'],
+                    $criteriosJson
+                ]
+            );
+
+            // El SP devuelve la plantilla actualizada.
+            // Si el SP devuelve una fila, toma la primera.
+            $plantillaActualizada = count($result) > 0 ? $result[0] : null;
+
+            // Opcional: Formatear las claves a camelCase para la respuesta JSON
+            if ($plantillaActualizada) {
+                $plantillaActualizada = [
+                    'plantillaId' => $plantillaActualizada->plantillaId,
+                    'plantillaNombre' => $plantillaActualizada->plantillaNombre,
+                    'procesoId' => $plantillaActualizada->procesoId,
+                    'creadoEn' => $plantillaActualizada->creadoEn,
+                    'actualizadoEn' => $plantillaActualizada->actualizadoEn,
+                ];
+            }
+
+            return response()->json($plantillaActualizada);
+
+        } catch (\Exception $e) {
+            // MySQL error code 1644 is for SIGNAL SQLSTATE '45000'
+            if ($e->getCode() == 1644) {
+                return response()->json(['message' => $e->getMessage()], 404);
+            }
+            return response()->json(['message' => 'Error al actualizar la plantilla y criterios: ' . $e->getMessage()], 500);
+        }
+    }
+
+
 }

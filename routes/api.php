@@ -147,6 +147,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas (sp) crear equipo y proyecto
     Route::post('equipo-proyecto', [EquipoProyectoController::class, 'store']);
 
+    // Rutas para consumir los Stored Procedures de procesos de evaluación, rubricas, etc.
+    Route::get('/procesos-evaluacion-detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'getProcesosEvaluacionDetalle']);
+    Route::post('/plantillas-criterios', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'storePlantillaYCriterios']);
+    Route::put('/plantillas-criterios/{plantillaId}', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'updatePlantillaYCriterios']);
+
     Route::apiResource('procesos-evaluacion', App\Http\Controllers\Api\ProcesosEvaluacionController::class);
     Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
     Route::apiResource('criterios', App\Http\Controllers\Api\CriterioController::class);
