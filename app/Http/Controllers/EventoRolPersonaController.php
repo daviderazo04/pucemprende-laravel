@@ -172,7 +172,7 @@ class EventoRolPersonaController extends Controller
         $eventosRoles = EventoRolPersona::with([
             'rolEvento:id,nombre',         // Asegúrate de que esta relación esté definida en el modelo EventoRolPersona
             'evento:id,nombre',            // Relación con evento
-            'persona:id,nombre,apellido,identificacion' // Relación con persona
+            'persona:id,nombre,apellido,identificacion,alumni' // Relación con persona
         ])->get();
 
         $resultado = $eventosRoles->map(function ($item) {
@@ -184,6 +184,7 @@ class EventoRolPersonaController extends Controller
                     'nombre' => $item->persona->nombre ?? null,
                     'apellido' => $item->persona->apellido ?? null,
                     'identificacion' => $item->persona->identificacion ?? null,
+                    'alumni' => $item->persona->alumni ?? null,
                 ],
                 'estado_borrado' => $item->estado_borrado,
             ];
@@ -207,7 +208,7 @@ class EventoRolPersonaController extends Controller
         $registro = EventoRolPersona::with([
             'rolEvento:id,nombre',
             'evento:id,nombre',
-            'persona:id,nombre,apellido,identificacion'
+            'persona:id,nombre,apellido,identificacion,alumni'
         ])->find($id);
 
         if (!$registro) {
@@ -222,6 +223,7 @@ class EventoRolPersonaController extends Controller
                 'nombre' => $registro->persona->nombre ?? null,
                 'apellido' => $registro->persona->apellido ?? null,
                 'identificacion' => $registro->persona->identificacion ?? null,
+                'alumni' => $registro->persona->alumni ?? null,
             ],
             'estado_borrado' => $registro->estado_borrado,
         ];
