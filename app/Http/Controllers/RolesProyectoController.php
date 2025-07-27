@@ -102,7 +102,7 @@ class RolesProyectoController extends Controller
     public function destroy(RolesProyecto $rolesProyecto)
     {
         // Solo admin puede borrar
-        if (request()->user()->rol_id !== 1) {
+        if (request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar una rol de proyecto.'], 403);
         }
 
