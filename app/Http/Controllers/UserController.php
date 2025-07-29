@@ -80,6 +80,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     // función para actualizar un usuario
     public function update(Request $request, $id)
     {
@@ -125,6 +126,46 @@ class UserController extends Controller
         $user->save();
 
         return response()->json($user, 200);
+    }
+    // función para obtener las estadísticas del usuario
+    public function getUserEstadisticas(Request $request)
+    {
+
+        try {
+            // Obtener el ID del usuario autenticado
+            $userId = $request->user()->id;
+
+            $estadisticas = DB::select('CALL GetUserEstadisticas(?)', [$userId]);
+
+            if (empty($estadisticas)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudieron obtener las estadísticas',
+                    'data' => [
+                        'total_proyectos' => 0,
+                        'total_eventos' => 0,
+                        'total_equipos' => 0
+                    ]
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estadísticas obtenidas correctamente',
+                'data' => $estadisticas[0]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error obteniendo estadísticas: ' . $e->getMessage(),
+                'data' => [
+                    'total_proyectos' => 0,
+                    'total_eventos' => 0,
+                    'total_equipos' => 0
+                ]
+            ], 500);
+        }
     }
     // función para eliminar un usuario
     public function destroy(Request $request, $id)

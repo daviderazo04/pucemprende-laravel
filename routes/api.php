@@ -188,6 +188,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/persona/user/{userId}', [PersonaController::class, 'getByUser']);
     Route::apiResource('persona', PersonaController::class);
     // Rutas - Usuario
+    Route::get('/usuario/estadisticas/{id}', [UserController::class, 'getUserEstadisticas']);
     Route::apiResource('usuario', App\Http\Controllers\UserController::class);
 
     // Ruta certificados
