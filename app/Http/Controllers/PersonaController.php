@@ -110,7 +110,17 @@ class PersonaController extends Controller
 
         return response()->json($personas);
     }
+    public function getByUser(Request $request, $user_id)
+    {
+        // Buscar persona por user_id
+        $persona = Persona::where('users_id', $user_id)->first();
 
+        if (!$persona) {
+            return response()->json(['message' => 'Persona no encontrada.'], 404);
+        }
+
+        return response()->json($persona);
+    }
     public function update(Request $request, Persona $persona)
     {
         // Solo permitir si el usuario tiene rol_id = 1
