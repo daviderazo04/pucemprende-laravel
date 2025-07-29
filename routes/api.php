@@ -28,6 +28,8 @@ use App\Http\Controllers\RolEventoController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\ResultadoRubricaController;
+use App\Http\Controllers\ResultadoEvaluacionController;
 
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
@@ -101,7 +103,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('archivos', ArchivoController::class);
 
     // Rutas - Archivos de Proyecto
+    Route::get('archivos-proyecto/proyecto/{proyecto_id}', [ArchivoProyectoController::class, 'getByProyectoURL']);
     Route::apiResource('archivos-proyecto', ArchivoProyectoController::class);
+
 
     // Rutas - Roles generales del sistema
     Route::apiResource('rol', RolesController::class);
@@ -155,6 +159,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('procesos-evaluacion', App\Http\Controllers\Api\ProcesosEvaluacionController::class);
     Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
     Route::apiResource('criterios', App\Http\Controllers\Api\CriterioController::class);
+
+    // Rutas para Resultados de Rubrica y Evaluación
+    Route::apiResource('resultado-rubrica', App\Http\Controllers\ResultadoRubricaController::class);
+    Route::get('/resultado-rubrica/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getByEquipo']);
+    Route::get('/resultado-rubrica/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getByPlantilla']);
+    Route::get('/resultado-rubrica/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByEquipo']);
+    Route::get('/resultado-rubrica/estadisticas/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByPlantilla']);
+
+    Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
+    Route::get('/resultado-evaluacion/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByEquipo']);
+    Route::get('/resultado-evaluacion/criterio/{criterioId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByCriterio']);
+    Route::get('/resultado-evaluacion/evaluador/{evaluadorId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByEvaluador']);
+    Route::get('/resultado-evaluacion/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getEstadisticasByEquipo']);
+    Route::get('/resultado-evaluacion/vista/consolidada-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getVistaConsolidadaEquipos']);
+    Route::get('/resultado-evaluacion/vista/comparativa-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getVistaComparativaEquipos']);
+    Route::get('/resultado-evaluacion/eventos/con-evaluaciones', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getEventosConEvaluaciones']);
 
     //Para mandar correos a organizaciones
     Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);
