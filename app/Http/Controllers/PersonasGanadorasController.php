@@ -30,18 +30,6 @@ class PersonasGanadorasController extends Controller
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
-        // Verificar si el usuario tiene rol_id = 8 (administrador del sistema)
-        // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
-        $isSystemAdmin = ($request->user()->rol_id == 8);
-        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
-                                        ->exists();
-
-        if (!$isSystemAdmin && !$isEventAuthor) {
-            return response()->json(['message' => 'No tienes permiso para ver las personas ganadoras de este evento.'], 403);
-        }
-
         $personasGanadora = PersonasGanadora::all();
         return response()->json($personasGanadora);
     }
@@ -67,7 +55,7 @@ class PersonasGanadorasController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -116,13 +104,13 @@ class PersonasGanadorasController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para ver las personas ganadoras de este evento.'], 403);
         }
-        
+
         // Buscar la sede por id
         $personasGanadora = PersonasGanadora::find($id);
 
@@ -154,7 +142,7 @@ class PersonasGanadorasController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -204,7 +192,7 @@ class PersonasGanadorasController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {

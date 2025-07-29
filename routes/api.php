@@ -28,6 +28,7 @@ use App\Http\Controllers\RolEventoController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\CertificadosController;
 use App\Http\Controllers\ResultadoRubricaController;
 use App\Http\Controllers\ResultadoEvaluacionController;
 
@@ -187,6 +188,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('persona', PersonaController::class);
     // Rutas - Usuario
     Route::apiResource('usuario', App\Http\Controllers\UserController::class);
+
+    // Ruta certificados
+    Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
 });
 
