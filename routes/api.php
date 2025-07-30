@@ -100,6 +100,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas - Archivos (post para un file especifico, solo acepta files via blob, en este caso imagenes) (multipart/form-data)
     Route::post('/archivos/upload', [ArchivoController::class, 'storeFile']);
 
+    // Rutas - Proyectos (post para un file especifico, solo acepta files via blob, en este caso imagenes) (multipart/form-data)
+    Route::post('/archivos/proyecto/upload', [ArchivoController::class, 'storeFileProyecto']);
+
+
     // Rutas - Archivos (standard JSON para Archivo (Creando con una URL))
     Route::apiResource('archivos', ArchivoController::class);
 
