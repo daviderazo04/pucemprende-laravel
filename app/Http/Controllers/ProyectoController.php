@@ -245,4 +245,26 @@ class ProyectoController extends Controller
 
         return response()->json($proyectos);
     }
+
+    public function ProyectosConEventos(Request $request)
+    {
+        $proyectos = Proyecto::select(
+                'eventos.id as evento_id',
+                'proyectos.id as proyecto_id',
+                'proyectos.creado_en',
+                'proyectos.actualizado_en',
+                'proyectos.equipo_id',
+                'proyectos.titulo',
+                'proyectos.descripcion',
+                'proyectos.estado',
+                'proyectos.fecha_inicio',
+                'proyectos.fecha_fin'
+            )
+            ->join('equipos', 'proyectos.equipo_id', '=', 'equipos.id')
+            ->join('eventos', 'equipos.evento_id', '=', 'eventos.id')
+            ->get();
+
+        return response()->json($proyectos);
+    }
+
 }
