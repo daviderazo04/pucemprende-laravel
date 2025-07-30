@@ -76,7 +76,9 @@ class ArchivoProyectoController extends Controller
         if ($request->user()->rol_id !== 8 && !$isEventAuthor && !$isProjectLeader) {
             return response()->json(['message' => 'No tienes permiso para crear archivos en este proyecto.'], 403);
         }
-
+        // Eliminar archivos existentes del proyecto antes de agregar el nuevo
+        ArchivoProyecto::where('proyecto_id', $request->proyecto_id)->delete();
+        // Crear el nuevo archivo de proyecto
         $archivoProyecto = ArchivoProyecto::create([
             'archivo_id' => $request->archivo_id,
             'proyecto_id' => $request->proyecto_id
