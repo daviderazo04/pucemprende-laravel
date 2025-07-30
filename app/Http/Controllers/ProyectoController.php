@@ -223,4 +223,26 @@ class ProyectoController extends Controller
 
         return response()->json(['message' => 'Proyecto marcado como borrado lógicamente.'], 200);
     }
+
+    public function ProyectosPorEvento(Request $request, $id)
+    {
+        // Buscar proyecto por id
+        $evento = Evento::find($id);
+
+        if (!$evento) {
+            return response()->json(['message' => 'Evento no encontrado'], 404);
+        }
+
+        $equipos = Equipo::where('evento_id', $evento->id)->get();
+
+        if (!$equipos) {
+            return response()->json(['message' => 'Equipos no encontrados'], 404);
+        }
+        $proyectos = [];
+        foreach ($equipos as $equipo) {
+            $proyectos[] = Proyecto::where('equipo_id', $equipo->id)->get();
+        }
+
+        return response()->json($proyectos);
+    }
 }

@@ -89,6 +89,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('categoria', CategoriaController::class);
 
     // Rutas - Proyectos
+    Route::get('proyecto/proyectosPorEvento/{evento_id}', [ProyectoController::class, 'ProyectosPorEvento']);
     Route::apiResource('proyecto', ProyectoController::class);
 
     // Rutas - Miembros de proyecto
