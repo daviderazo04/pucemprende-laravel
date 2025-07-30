@@ -16,9 +16,9 @@ class SedeController extends Controller
      */
     public function index(Request $request)
     {
-        //Solo los administradores pueden acceder a las sedes 
+        //Solo los administradores pueden acceder a las sedes
         //(no tiene sentido que cualquier usuario las pueda ver porque solo sirven para asociar un proyecto con ellas)
-        
+
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
@@ -62,7 +62,7 @@ class SedeController extends Controller
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
-        
+
         // Buscar la sede por id
         $sede = Sede::find($id);
 
@@ -78,8 +78,7 @@ class SedeController extends Controller
      */
     public function update(Request $request, Sede $sede)
     {
-        print($request->user());
-        // Solo permitir si el usuario tiene rol_id = 1
+        // Solo permitir si el usuario tiene rol_id = 8
         if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para editar una sede.'], 403);
         }
@@ -95,7 +94,7 @@ class SedeController extends Controller
         $sede->fill($request->only([
             'nombre'
         ]));
-        
+
         $sede->save();
 
         return response()->json($sede);
@@ -104,7 +103,7 @@ class SedeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Sede $sede)
+    public function destroy(Request $request, Sede $sede)
     {
          // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 8) {

@@ -61,7 +61,7 @@ class RolesProyectoController extends Controller
         if ($request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
-        
+
         if (!$rolesProyecto) {
             return response()->json(['message' => 'Rol de proyecto no encontrado'], 404);
         }
@@ -99,7 +99,7 @@ class RolesProyectoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(RolesProyecto $rolesProyecto)
+    public function destroy(Request $request, RolesProyecto $rolesProyecto)
     {
         // Solo admin puede borrar
         if (request()->user()->rol_id !== 8) {

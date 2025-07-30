@@ -59,7 +59,7 @@ class RolEventoController extends Controller
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
-        
+
         if (!$rolEvento) {
             return response()->json(['message' => 'Rol de evento no encontrado'], 404);
         }
@@ -97,7 +97,7 @@ class RolEventoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(RolEvento $rolEvento)
+    public function destroy(Request $request, RolEvento $rolEvento)
     {
         // Solo admin puede borrar
         if (request()->user()->rol_id !== 8) {

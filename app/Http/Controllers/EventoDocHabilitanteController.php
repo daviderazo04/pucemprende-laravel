@@ -23,7 +23,7 @@ class EventoDocHabilitanteController extends Controller
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ver los documentos habilitantes logados con un evento.'], 403);
         }
-        
+
         $eventosDocHabilitante = EventoDocHabilitante::all();
         return response()->json($eventosDocHabilitante);
     }
@@ -55,7 +55,8 @@ class EventoDocHabilitanteController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -82,7 +83,7 @@ class EventoDocHabilitanteController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($evento_id, $dochab_id)
+    public function show(Request $request, $evento_id, $dochab_id)
     {
         // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
@@ -104,7 +105,8 @@ class EventoDocHabilitanteController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -145,7 +147,8 @@ class EventoDocHabilitanteController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -182,7 +185,7 @@ class EventoDocHabilitanteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($evento_id, $dochab_id)
+    public function destroy(Request $request, $evento_id, $dochab_id)
     {
         // Solo permitir si el usuario tiene rol_id = 1
         if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
@@ -204,7 +207,8 @@ class EventoDocHabilitanteController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {

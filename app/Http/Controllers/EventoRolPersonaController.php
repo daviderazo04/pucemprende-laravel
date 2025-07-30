@@ -30,7 +30,7 @@ class EventoRolPersonaController extends Controller
 
         $eventoRolPersona = EventoRolPersona::all();
         return response()->json($eventoRolPersona);
-        
+
     }
 
     /**
@@ -54,7 +54,8 @@ class EventoRolPersonaController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -98,7 +99,7 @@ class EventoRolPersonaController extends Controller
         if (!$persona) {
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
-        
+
         if (!$eventoRolPersona) {
             return response()->json(['message' => 'Rol de persona de evento no encontrado'], 404);
         }
@@ -129,7 +130,8 @@ class EventoRolPersonaController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -257,6 +259,7 @@ class EventoRolPersonaController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -297,6 +300,7 @@ class EventoRolPersonaController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {

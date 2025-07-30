@@ -57,6 +57,7 @@ class MiembrosProyectoController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
             ->where('persona_id', $persona->id)
             ->where('rol_id', 1)
+            ->where('estado_borrado', false)
             ->exists();
 
         $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
@@ -142,6 +143,7 @@ class MiembrosProyectoController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
             ->where('persona_id', $persona->id)
             ->where('rol_id', 1)
+            ->where('estado_borrado', false)
             ->exists();
 
         $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
@@ -187,7 +189,7 @@ class MiembrosProyectoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MiembrosProyecto $miembrosProyecto)
+    public function destroy(Request $request, MiembrosProyecto $miembrosProyecto)
     {
          // Admin y usuarios pueden borrar
         if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
@@ -219,9 +221,15 @@ class MiembrosProyectoController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
+        $hasPermission = $isSystemAdmin || $isEventAuthor;
+
+        if (!$hasPermission) {
+            return response()->json(['message' => 'No tienes permiso para eliminar miembros del proyecto.'], 403);
+        }
         // Intenta eliminar el documento
         try {
             $miembrosProyecto->delete();

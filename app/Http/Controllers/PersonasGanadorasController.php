@@ -56,6 +56,7 @@ class PersonasGanadorasController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -99,12 +100,20 @@ class PersonasGanadorasController extends Controller
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
+        $personasGanadora = PersonasGanadora::find($id);
+        if (!$personasGanadora) {
+            return response()->json(['message' => 'Persona ganadora no encontrada'], 404);
+        }
+
+        $evento_id = $personasGanadora->evento_id;
+
         // Verificar si el usuario tiene rol_id = 8 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
-        $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -143,6 +152,7 @@ class PersonasGanadorasController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
@@ -174,7 +184,7 @@ class PersonasGanadorasController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PersonasGanadora $personasGanadora)
+    public function destroy(Request $request, PersonasGanadora $personasGanadora)
     {
          // Admin puede borrar
         if (request()->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
@@ -193,6 +203,7 @@ class PersonasGanadorasController extends Controller
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {

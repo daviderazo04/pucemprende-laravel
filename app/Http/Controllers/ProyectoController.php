@@ -52,11 +52,13 @@ class ProyectoController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
@@ -83,7 +85,7 @@ class ProyectoController extends Controller
             'fecha_inicio' => $evento->fecha_inicio,
             'fecha_fin' => $evento->fecha_fin,
         ]);
-        
+
 
         $miembrosProyecto = MiembrosProyecto::create([
             'creado_en' => Carbon::now(),
@@ -92,7 +94,7 @@ class ProyectoController extends Controller
             'proyecto_id' => $proyecto->id,
             'persona_id' => $persona->id,
         ]);
-        
+
         return response()->json($proyecto, 201);
     }
 
@@ -138,10 +140,13 @@ class ProyectoController extends Controller
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
+
         $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
@@ -165,7 +170,7 @@ class ProyectoController extends Controller
             'descripcion',
             'estado'
         ]));
-        
+
         $proyecto->actualizado_en = Carbon::now();
         $proyecto->save();
 
@@ -175,7 +180,7 @@ class ProyectoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Proyecto $proyecto)
+    public function destroy(Request $request, Proyecto $proyecto)
     {
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar proyectos.'], 403);
@@ -187,12 +192,25 @@ class ProyectoController extends Controller
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
+        $equipo = Equipo::find($proyecto->equipo_id);
+
+        if (!$equipo) {
+            return response()->json(['error' => 'Equipo no encontrado para este proyecto'], 404);
+        }
+
+        $evento = Evento::find($equipo->evento_id);
+
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado para este equipo'], 404);
+        }
+
         // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1) 
+                                        ->where('rol_id', 1)
+                                        ->where('estado_borrado', false)
                                         ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {

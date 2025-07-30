@@ -67,7 +67,7 @@ class RolesController extends Controller
 
         // Buscar proyecto por id
         $role = Role::find($id);
-        
+
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
@@ -111,14 +111,14 @@ class RolesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         // Solo permitir si el usuario tiene rol_id = 1
         $role = Role::find($id);
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
-    
+
         // Admin puede borrar
         if (request()->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar este elemento.'], 403);
