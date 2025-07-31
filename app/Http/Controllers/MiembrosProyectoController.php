@@ -76,6 +76,20 @@ class MiembrosProyectoController extends Controller
             ], 403);
         }
 
+        // Verificar si ya está inscrito en el evento
+        $inscrito = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->exists();
+
+        if (!$inscrito) {
+            $eventoRolPersona = EventoRolPersona::create([
+                'evento_id' => $evento->id,
+                'rol_id' => 4,                      // Asignar rol_id 4 para inscripción (miembro)
+                'persona_id' => $persona->id,
+                'estado_borrado' => false, // No marcado como borrado
+            ]);
+        }
+
         // Validación de datos
         $validator = Validator::make($request->all(), [
             'rol_id' => 'required|integer|exists:roles_proyectos,id',

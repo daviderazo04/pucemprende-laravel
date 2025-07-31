@@ -316,4 +316,47 @@ class EventoRolPersonaController extends Controller
             return response()->json(['message' => 'Error al activar el rol de persona de evento.', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function InscribirEvento(Request $request)
+    {
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Validar que el evento exista
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        // Verificar si ya está inscrito en el evento
+        $inscrito = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->exists();
+
+        if ($inscrito) {
+            return response()->json(['message' => 'Ya estás inscrito en este evento.'], 409);
+        }
+
+        // Validar los campos necesarios
+        $validator = Validator::make($request->all(), [
+            'evento_id' => 'required|integer|exists:eventos,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $eventoRolPersona = EventoRolPersona::create([
+            'evento_id' => $request->evento_id,
+            'rol_id' => 4,                      // Asignar rol_id 4 para inscripción (miembro)
+            'persona_id' => $persona->id,
+            'estado_borrado' => false, // No marcado como borrado
+        ]);
+
+        return response()->json($eventoRolPersona, 201);
+    }
+
 }
