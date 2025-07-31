@@ -359,4 +359,22 @@ class EventoRolPersonaController extends Controller
         return response()->json($eventoRolPersona, 201);
     }
 
+    public function EventosPorPersona(Request $request)
+    {
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Buscar todos los registros en evento_rol_persona donde participa esta persona
+        $registros = EventoRolPersona::where('persona_id', $persona->id)
+            ->where('estado_borrado', false)
+            ->get();
+
+        return response()->json($registros, 201);
+    }
+
+
+
 }

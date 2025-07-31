@@ -141,6 +141,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //Rutas - Evento Rol Persona
     Route::post('/evento-rol-persona/inscribirse', [EventoRolPersonaController::class, 'InscribirEvento']);
+    Route::get('/evento-rol-persona/eventos-por-persona', [EventoRolPersonaController::class, 'EventosPorPersona']);
     Route::get('/evento-rol-persona/detalles', [EventoRolPersonaController::class, 'indexConDetalles']);
     Route::get('/evento-rol-persona/detalles/{id}', [EventoRolPersonaController::class, 'showConDetalles']);
     Route::delete('/evento-rol-persona/{eventoRolPersona}/borrar', [EventoRolPersonaController::class, 'destroy']);
