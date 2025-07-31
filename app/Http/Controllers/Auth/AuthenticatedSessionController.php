@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Persona;
 use App\Models\EventoRolPersona;
+use App\Models\MiembrosProyecto;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -53,11 +54,22 @@ class AuthenticatedSessionController extends Controller
                 });
         }
 
+        // Proyectos donde es líder (rol_id = 1 en miembros_proyecto)
+        $proyectosLiderados = MiembrosProyecto::where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'proyecto_id' => $item->proyecto_id,
+                ];
+            });
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
             'eventos' => $eventos,
+            'proyectos_liderados' => $proyectosLiderados,
         ]);
     }
 
