@@ -130,6 +130,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas - Equipos
     Route::apiResource('equipos', EquipoController::class);
+    Route::get('equipos/evento/{eventoId}', [EquipoController::class, 'getEquiposByEventoId']);
 
     //Rutas - Miembros de equipo
     Route::apiResource('miembros-equipo', MiembrosEquipoController::class);

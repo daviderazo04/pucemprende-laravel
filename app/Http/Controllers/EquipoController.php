@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Equipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 class EquipoController extends Controller
 {
@@ -54,7 +55,51 @@ class EquipoController extends Controller
     {
         return response()->json($equipo);
     }
+    // funcion para obtener equipos por id de evento
+    public function getEquiposByEventoId( Request $request,$eventoId){
 
+        // Verificar si el usuario tiene permisos para ver los equipos admin o superadmin
+        if($request->user()->rol_id != 1 && $request->user()->rol_id != 8){
+            return response()->json(['message'=>'No tienes permiso para ver equipos'],403);
+        }
+
+        // Llamar al procedimiento almacenado que devuelve los equipos del evento con sus miembros
+        $resultados = DB::select('CALL sp_buscar_equipo_por_evento(?)', [$eventoId]);
+
+        // Verificar si no se encontraron resultados
+        if (empty($resultados)) {
+            return response()->json(['message' => 'No se encontraron equipos para el evento especificado.'], 404);
+        }
+
+        // Agrupar los resultados por ID de equipo para organizar los datos por equipo
+        $equiposAgrupados = collect($resultados)
+            ->groupBy('id') // Agrupa todos los resultados que tienen el mismo ID de equipo
+            ->map(function($grupo) {
+                $primerElemento = $grupo->first(); // Toma el primer elemento del grupo para usar sus datos generales del equipo
+
+                return [
+                    'id' => $primerElemento->id, // ID del equipo
+                    'nombre_equipo' => $primerElemento->nombre_equipo, // Nombre del equipo
+                    'evento_id' => $primerElemento->evento_id, // ID del evento
+                    'nombre_evento' => $primerElemento->evento, // Nombre del evento
+                    'ranking' => $primerElemento->ranking, // Ranking del equipo
+                    'estado_borrado' => $primerElemento->estado_borrado, // Estado de borrado lógico
+                    'creado_en' => $primerElemento->creado_en, // Fecha de creación
+                    'actualizado_en' => $primerElemento->actualizado_en, // Fecha de última actualización
+
+                    // Listado de miembros del equipo, filtrando nulos y eliminando duplicados
+                    'miembros' => $grupo->map(function($item) {
+                        return $item->miembro; // Extrae el nombre del miembro
+                    })->filter(function($miembro) {
+                        return !is_null($miembro) && $miembro !== ''; // Filtra miembros no válidos
+                    })->unique()->values()->toArray() // Elimina duplicados y reordena el array
+                ];
+            })
+            ->values(); // Reindexa el array resultante (para que no tenga claves asociativas por ID)
+
+        // Retornar los equipos agrupados como respuesta en formato JSON
+        return response()->json($equiposAgrupados);
+    }
     /**
      * Update the specified resource in storage.
      */
