@@ -35,18 +35,15 @@ class ResultadoRubricaController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para crear resultados de rubrica.'], 403);
-        }
-
         $validator = Validator::make($request->all(), [
             'persona_id' => 'required|exists:personas,id',
             'plantilla_id' => 'required|exists:plantillas_evaluacion,id',
             'equipo_id' => 'nullable|exists:equipos,id',
-            'total' => 'required|numeric|min:0',
         ]);
-
+        // Solo permitir si el usuario es superadmin (8), adminEvento (2), gestorEvento (3), mentor (4), jurado (5)
+        if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 4 && $request->rolEvento_id !== 5) {
+            return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
+        }
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -61,14 +58,17 @@ class ResultadoRubricaController extends Controller
             return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
         }
 
+        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?)", [$request->plantilla_id]);
+        // Extraer el valor del total del resultado del procedimiento almacenado
+        $total = $totalRubrica[0]->total ?? 0; //total es el campo que devuelve el procedimiento almacenado
+
         $resultado = ResultadoRubrica::create([
             'persona_id' => $request->persona_id,
             'plantilla_id' => $request->plantilla_id,
             'equipo_id' => $request->equipo_id,
-            'total' => $request->total,
+            'total' => $total,
         ]);
 
-        $resultado->load(['persona', 'plantilla', 'equipo']);
         return response()->json($resultado, 201);
     }
 

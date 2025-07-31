@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ResultadosEvaluacion;
+use App\Models\Criterio;
+use App\Models\RolEvento;
 use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -35,10 +37,7 @@ class ResultadoEvaluacionController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
-        }
+
 
         $validator = Validator::make($request->all(), [
             'equipo_id' => 'required|exists:equipos,id',
@@ -46,35 +45,46 @@ class ResultadoEvaluacionController extends Controller
             'evaluador_id' => 'required|exists:personas,id',
             'puntaje' => 'required|numeric|min:0',
             'comentarios' => 'nullable|string',
-            'evaluado_en' => 'nullable|date',
+            'rolEvento_id' => 'required|integer|exists:rolEvento,id',
         ]);
+        // Solo permitir si el usuario es superadmin (8), adminEvento (2), gestorEvento (3), mentor (4), jurado (5)
+        if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 4 && $request->rolEvento_id !== 5) {
+            return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
+        }
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Verificar si ya existe una evaluación para esta combinación
-        $existingEvaluation = ResultadosEvaluacion::where('equipo_id', $request->equipo_id)
+        // Verificar si ya existe una evaluación para esta combinación entre equipo, criterio y evaluador
+        $existeEvaluacion = ResultadosEvaluacion::where('equipo_id', $request->equipo_id)
             ->where('criterio_id', $request->criterio_id)
             ->where('evaluador_id', $request->evaluador_id)
             ->first();
 
-        if ($existingEvaluation) {
-            return response()->json(['message' => 'Ya existe una evaluación para esta combinación de equipo, criterio y evaluador.'], 409);
+        if ($existeEvaluacion) {
+            return response()->json(['message' => 'Ya existe una evaluación para este equipo con este criterio y evaluador con id ' . $request->evaluador_id . '.'], 409);
         }
 
+        // Obtener el criterio de evaluación
+        $criterio = Criterio::where('id', $request->criterio_id)
+            ->first();
+        if (!$criterio) {
+            return response()->json(['error' => 'Criterio no encontrado'], 404);
+        }
+        // Calcular el puntaje en base al criterio con el peso, se divide entre 5 dado que el puntaje máximo es 5
+        $puntajeCalculado = ($request->puntaje * $criterio->peso)/5;
         $resultado = ResultadosEvaluacion::create([
             'creado_en' => Carbon::now(),
             'actualizado_en' => Carbon::now(),
             'equipo_id' => $request->equipo_id,
             'criterio_id' => $request->criterio_id,
             'evaluador_id' => $request->evaluador_id,
-            'puntaje' => $request->puntaje,
+            'puntaje' => $puntajeCalculado,
             'comentarios' => $request->comentarios,
-            'evaluado_en' => $request->evaluado_en ? Carbon::parse($request->evaluado_en) : Carbon::now(),
+            'evaluado_en' => Carbon::now(),
         ]);
 
-        $resultado->load(['equipo', 'criterio', 'persona']);
         return response()->json($resultado, 201);
     }
 
@@ -83,8 +93,8 @@ class ResultadoEvaluacionController extends Controller
      */
     public function show(Request $request, $id)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        // Solo permitir si el usuario es superadmin y adminEvento (2)
+        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
             return response()->json(['message' => 'No tienes permiso para ver este resultado de evaluación.'], 403);
         }
 
@@ -277,14 +287,14 @@ class ResultadoEvaluacionController extends Controller
 
         // Validar parámetro de evento
         $eventoId = $request->input('evento_id');
-        
+
         if (!$eventoId) {
             return response()->json(['message' => 'El parámetro evento_id es requerido.'], 400);
         }
 
         // Estadísticas generales por equipo del evento específico
         $estadisticasPorEquipo = DB::select("
-            SELECT 
+            SELECT
                 e.id as equipo_id,
                 e.nombre as nombre_equipo,
                 ev.id as evento_id,
@@ -304,7 +314,7 @@ class ResultadoEvaluacionController extends Controller
 
         // Ranking de equipos por promedio en el evento
         $rankingEquipos = DB::select("
-            SELECT 
+            SELECT
                 e.id as equipo_id,
                 e.nombre as nombre_equipo,
                 ev.nombre as nombre_evento,
@@ -322,7 +332,7 @@ class ResultadoEvaluacionController extends Controller
 
         // Evaluaciones detalladas por equipo y criterio en el evento
         $evaluacionesDetalladas = DB::select("
-            SELECT 
+            SELECT
                 e.id as equipo_id,
                 e.nombre as nombre_equipo,
                 ev.nombre as nombre_evento,
@@ -343,7 +353,7 @@ class ResultadoEvaluacionController extends Controller
 
         // Estadísticas globales del evento
         $estadisticasGlobales = DB::select("
-            SELECT 
+            SELECT
                 ev.id as evento_id,
                 ev.nombre as nombre_evento,
                 COUNT(DISTINCT e.id) as total_equipos,
@@ -389,7 +399,7 @@ class ResultadoEvaluacionController extends Controller
         }
 
         $baseQuery = "
-            SELECT 
+            SELECT
                 e.id as equipo_id,
                 e.nombre as nombre_equipo,
                 ev.id as evento_id,
@@ -399,8 +409,8 @@ class ResultadoEvaluacionController extends Controller
                 ROUND(AVG(re.puntaje), 2) as promedio_puntaje,
                 COUNT(re.id) as total_evaluaciones,
                 GROUP_CONCAT(
-                    CONCAT(p.nombres, ' ', p.apellidos, ': ', re.puntaje) 
-                    ORDER BY re.puntaje DESC 
+                    CONCAT(p.nombres, ' ', p.apellidos, ': ', re.puntaje)
+                    ORDER BY re.puntaje DESC
                     SEPARATOR ' | '
                 ) as detalle_evaluaciones
             FROM equipos e
