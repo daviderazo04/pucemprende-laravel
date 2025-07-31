@@ -148,6 +148,72 @@ class ProcesosEvaluacionController extends Controller
     }
 
     /**
+     * Retrieves a specific evaluation process with its nested templates and criteria by ID.
+     * Calls SP_ObtenerProcesoEvaluacionDetallePorId().
+     *
+     * @param  int  $id The ID of the evaluation process.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showDetalle($id)
+    {
+        try {
+            // Llama al Stored Procedure para obtener los detalles del proceso con el ID dado.
+            $result = DB::select('CALL SP_ObtenerProcesoEvaluacionDetallePorId(?)', [$id]);
+
+            // Si no se encuentra ningún resultado, el proceso no existe.
+            if (empty($result)) {
+                return response()->json(['message' => 'Proceso de evaluación no encontrado'], 404);
+            }
+
+            // El SP debe devolver una única fila para un ID específico.
+            $proceso = $result[0];
+
+            // Decodificar la columna 'plantillas' que viene como JSON string
+            $proceso->plantillas = $proceso->plantillas ? json_decode($proceso->plantillas, true) : [];
+
+            // Formatear las propiedades del proceso y sus anidados a camelCase para la respuesta JSON
+            $formattedProceso = [
+                'procesoId' => $proceso->procesoId,
+                'procesoTitulo' => $proceso->procesoTitulo,
+                'procesoCreadoEn' => $proceso->procesoCreadoEn,
+                'procesoActualizadoEn' => $proceso->procesoActualizadoEn,
+                'procesoEventoId' => $proceso->procesoEventoId,
+                'plantillas' => collect($proceso->plantillas)->map(function ($plantilla) {
+                    $formattedPlantilla = [
+                        'plantillaId' => $plantilla['plantillaId'],
+                        'plantillaNombre' => $plantilla['plantillaNombre'],
+                        'plantillaCreadoEn' => $plantilla['plantillaCreadoEn'],
+                        'plantillaActualizadoEn' => $plantilla['plantillaActualizadoEn'],
+                        // Asegurarse de que 'criterios' existe y no es nulo antes de decodificar
+                        'criterios' => (isset($plantilla['criterios']) && is_string($plantilla['criterios']) && $plantilla['criterios'])
+                            ? json_decode($plantilla['criterios'], true)
+                            : (is_array($plantilla['criterios']) ? $plantilla['criterios'] : []),
+                    ];
+                    // Mapear los criterios internos para camelCase
+                    $formattedPlantilla['criterios'] = collect($formattedPlantilla['criterios'])->map(function ($criterio) {
+                        return [
+                            'criterioId' => $criterio['criterioId'],
+                            'criterioNombre' => $criterio['criterioNombre'],
+                            'criterioDescripcion' => $criterio['criterioDescripcion'],
+                            'criterioPeso' => $criterio['criterioPeso'],
+                            'criterioCreadoEn' => $criterio['criterioCreadoEn'],
+                            'criterioActualizadoEn' => $criterio['criterioActualizadoEn'],
+                        ];
+                    })->all();
+                    return $formattedPlantilla;
+                })->all(),
+            ];
+
+            return response()->json($formattedProceso);
+
+        } catch (\Exception $e) {
+            // Manejo de errores en caso de que el SP falle o haya un problema con la base de datos
+            return response()->json(['message' => 'Error al obtener el detalle del proceso de evaluación: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
      * Store a new evaluation template with its criteria.
      * Calls SP_CrearPlantillaYCriterios().
      *

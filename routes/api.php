@@ -31,6 +31,7 @@ use App\Http\Controllers\RolesController;
 use App\Http\Controllers\CertificadosController;
 use App\Http\Controllers\ResultadoRubricaController;
 use App\Http\Controllers\ResultadoEvaluacionController;
+use App\Http\Controllers\ProcesosEvaluacion;
 
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
@@ -173,6 +174,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/resultado-rubrica/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getByPlantilla']);
     Route::get('/resultado-rubrica/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByEquipo']);
     Route::get('/resultado-rubrica/estadisticas/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByPlantilla']);
+    Route::get('/procesos-evaluacion/{id}/detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'showDetalle']);
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
     Route::get('/resultado-evaluacion/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByEquipo']);
