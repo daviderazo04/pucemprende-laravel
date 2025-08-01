@@ -44,7 +44,6 @@ class AuthenticatedSessionController extends Controller
         $eventos = [];
         if ($persona) {
             $eventos = EventoRolPersona::where('persona_id', $persona->id)
-                ->whereIn('rol_id', [1, 5])
                 ->get()
                 ->map(function ($item) {
                     return [
