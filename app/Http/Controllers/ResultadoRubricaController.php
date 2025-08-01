@@ -40,8 +40,8 @@ class ResultadoRubricaController extends Controller
             'plantilla_id' => 'required|exists:plantillas_evaluacion,id',
             'equipo_id' => 'nullable|exists:equipos,id',
         ]);
-        // Solo permitir si el usuario es superadmin (8), adminEvento (2), gestorEvento (3), mentor (4), jurado (5)
-        if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 4 && $request->rolEvento_id !== 5) {
+        // Solo permitir si el usuario es superadmin (8), adminEvento (1), gestorEvento (2), mentor (3), jurado (5)
+        if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 1 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 5) {
             return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
         }
         if ($validator->fails()) {
