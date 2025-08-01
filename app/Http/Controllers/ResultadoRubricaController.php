@@ -59,7 +59,7 @@ class ResultadoRubricaController extends Controller
             return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
         }
 
-        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?)", [$request->plantilla_id]);
+        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [$request->equipo_id, $request->plantilla_id, $request->persona_id]);
         // Extraer el valor del total del resultado del procedimiento almacenado
         $total = $totalRubrica[0]->total ?? 0; //total es el campo que devuelve el procedimiento almacenado
 
