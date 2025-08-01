@@ -39,6 +39,7 @@ class ResultadoRubricaController extends Controller
             'persona_id' => 'required|exists:personas,id',
             'plantilla_id' => 'required|exists:plantillas_evaluacion,id',
             'equipo_id' => 'nullable|exists:equipos,id',
+            'rolEvento_id' => 'required|integer|exists:rolEvento,id',
         ]);
         // Solo permitir si el usuario es superadmin (8), adminEvento (1), gestorEvento (2), mentor (3), jurado (5)
         if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 1 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 5) {
