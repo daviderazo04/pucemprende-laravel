@@ -78,8 +78,8 @@ class PersonaController extends Controller
      */
     public function show(Request $request, Persona $persona)
     {
-        // Solo permitir si el usuario tiene rol_id = 1 (admin) o rol_id = 8 (superadmin)
-        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        // Solo permitir si el usuario tiene rol_id = 1 (admin) o rol_id = 8 (superadmin) o rol_id = 2 (usuario)
+        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
             return response()->json(['message' => 'No tienes permiso para acceder a esta persona.'], 403);
         }
 
@@ -95,8 +95,8 @@ class PersonaController extends Controller
 
     public function getCedula(Request $request, $cedula)
     {
-        // Solo permitir si el usuario tiene rol_id = 1 (admin) o rol_id = 8 (superadmin)
-        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 1) {
+        // Solo permitir si el usuario tiene rol_id = 1 (admin) o rol_id = 8 (superadmin) o rol_id = 2 (usuario)
+        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 1 && $request->user()->rol_id !== 2) {
             return response()->json(['message' => 'No tienes permiso para acceder a esta persona.'], 403);
         }
 
