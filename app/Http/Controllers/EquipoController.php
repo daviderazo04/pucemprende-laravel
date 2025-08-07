@@ -23,7 +23,7 @@ class EquipoController extends Controller
      */
     public function store(Request $request)
     {
-        if($request->user()->rol_id!=1 && $request->user()->rol_id!=8){
+        if($request->user()->rol_id!=1 && $request->user()->rol_id!=8 && $request->user()->rol_id!=2){
             return response()->json(['message'=>'No tienes permiso para crear equipos'],403);
         }
         $validator = Validator::make($request->all(),[
