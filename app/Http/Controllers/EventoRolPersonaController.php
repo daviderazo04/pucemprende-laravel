@@ -30,7 +30,6 @@ class EventoRolPersonaController extends Controller
 
         $eventoRolPersona = EventoRolPersona::all();
         return response()->json($eventoRolPersona);
-
     }
 
     /**
@@ -53,10 +52,10 @@ class EventoRolPersonaController extends Controller
         // O si la persona es el autor del evento al que está queriando añadir un rol a una persona (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
@@ -129,10 +128,10 @@ class EventoRolPersonaController extends Controller
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $request->evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para actualizar este elemento, no eres autor del evento o administrador general.'], 403);
@@ -257,10 +256,10 @@ class EventoRolPersonaController extends Controller
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para borrar este elemento.'], 403);
@@ -268,8 +267,10 @@ class EventoRolPersonaController extends Controller
 
         // Intenta eliminar el documento
         try {
-            $eventoRolPersona->estado_borrado = true;
-            $eventoRolPersona->save();
+            $eventoRolPersona->delete();
+            //Para borrar con estado de borrado
+            //$eventoRolPersona->estado_borrado = true;
+            //$eventoRolPersona->save();
             return response()->json(['message' => 'Rol de persona de evento marcado como eliminado.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al eliminar el rol de persona de evento.', 'error' => $e->getMessage()], 500);
@@ -298,10 +299,10 @@ class EventoRolPersonaController extends Controller
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para activar este usuario.'], 403);
@@ -374,7 +375,4 @@ class EventoRolPersonaController extends Controller
 
         return response()->json($registros, 201);
     }
-
-
-
 }
