@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Proyecto
- * 
+ *
  * @property int $id
  * @property Carbon|null $creado_en
  * @property Carbon|null $actualizado_en
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $estado
  * @property Carbon|null $fecha_inicio
  * @property Carbon|null $fecha_fin
- * 
+ *
  * @property Equipo|null $equipo
  * @property Collection|Archivo[] $archivos
  * @property Collection|MiembrosProyecto[] $miembros_proyectos
@@ -53,11 +53,15 @@ class Proyecto extends Model
 		'fecha_fin'
 	];
 
-	public function equipo()
-	{
-		return $this->belongsTo(Equipo::class);
-	}
+    public function equipo()
+    {
+        return $this->belongsTo(Equipo::class);
+    }
 
+    public function evento()
+    {
+        return $this->hasOneThrough(Evento::class, Equipo::class, 'id', 'id', 'equipo_id', 'evento_id');
+    }
 	public function archivos()
 	{
 		return $this->belongsToMany(Archivo::class);

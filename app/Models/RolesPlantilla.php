@@ -28,17 +28,16 @@ class RolesPlantilla extends Model
     protected $table = 'roles_plantilla';
     protected $primaryKey = 'id'; // Asegurarse de que la clave primaria sea 'id'
     public $incrementing = true; // Cambiado a true porque 'id' es auto_increment
-    public $timestamps = true; // Cambiado a true para que Laravel gestione creado_en y actualizado_en
+    public $timestamps = false; // Desactivado porque no se usan los timestamps por defecto
 
     protected $casts = [
-        'id' => 'integer',
         'creado_en' => 'datetime',
         'actualizado_en' => 'datetime',
-        'plantilla_id' => 'integer',
-        'rol_id' => 'integer'
     ];
 
     protected $fillable = [
+        'creado_en',
+        'actualizado_en',
         'plantilla_id', // Añadido para asignación masiva
         'rol_id' // Añadido para asignación masiva
     ];

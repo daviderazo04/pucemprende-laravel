@@ -32,7 +32,7 @@ use App\Http\Controllers\CertificadosController;
 use App\Http\Controllers\ResultadoRubricaController;
 use App\Http\Controllers\ResultadoEvaluacionController;
 use App\Http\Controllers\ProcesosEvaluacion;
-
+use App\Http\Controllers\RolesPlantillaController;
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
 
@@ -93,6 +93,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('proyecto/proyectosConEventos', [ProyectoController::class, 'ProyectosConEventos']);
     Route::get('proyecto/proyectosPorEvento/{evento_id}', [ProyectoController::class, 'ProyectosPorEvento']);
     Route::apiResource('proyecto', ProyectoController::class);
+    Route::get('/proyectos-completos', [ProyectoController::class, 'getProyectosCompletos']);
+    Route::get('/proyectos-completos/{id}', [ProyectoController::class, 'getProyectoCompleto']);
+    Route::get('/proyectos-completos/evento/{eventoId}', [ProyectoController::class, 'getProyectosPorEventoCompleto']);
 
     // Rutas - Miembros de proyecto
     Route::apiResource('miembros-proyecto', MiembrosProyectoController::class);
@@ -171,6 +174,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('plantillas-evaluacion', App\Http\Controllers\Api\PlantillasEvaluacionController::class);
     Route::apiResource('criterios', App\Http\Controllers\Api\CriterioController::class);
 
+    // Rutas para Roles Plantilla
+    Route::apiResource('roles-plantilla', App\Http\Controllers\RolesPlantillaController::class);
+    Route::get('/roles-plantilla/plantilla/{id}', [App\Http\Controllers\RolesPlantillaController::class, 'getPlantillaById']);
+
     // Rutas para Resultados de Rubrica y Evaluación
     Route::apiResource('resultado-rubrica', App\Http\Controllers\ResultadoRubricaController::class);
     Route::get('/resultado-rubrica/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getByEquipo']);
@@ -211,3 +218,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 // Incluye las rutas de autenticación como /api/register, /api/login, etc.
 require __DIR__ . '/auth.php';
+
+

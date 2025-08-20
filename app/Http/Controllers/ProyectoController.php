@@ -13,6 +13,8 @@ use App\Models\Persona;
 use App\Models\Evento;
 use App\Models\Equipo;
 use App\Models\MiembrosProyecto;
+use Illuminate\Support\Facades\DB;
+use App\Models\Archivo; // Agregar el import del modelo Archivo
 
 class ProyectoController extends Controller
 {
@@ -265,6 +267,198 @@ class ProyectoController extends Controller
             ->get();
 
         return response()->json($proyectos);
+    }
+
+    /**
+     * Obtener proyectos con información completa incluyendo equipo, evento y miembros
+     */
+    public function getProyectosCompletos(Request $request)
+    {
+        $proyectos = Proyecto::select(
+                'proyectos.id',
+                'proyectos.titulo',
+                'proyectos.descripcion',
+                'proyectos.fecha_inicio',
+                'proyectos.fecha_fin',
+                'proyectos.estado',
+                'proyectos.equipo_id',
+                'equipos.nombre as equipo_nombre',
+                'eventos.id as evento_id',
+                'eventos.nombre as evento_nombre'
+            )
+            ->join('equipos', 'proyectos.equipo_id', '=', 'equipos.id')
+            ->join('eventos', 'equipos.evento_id', '=', 'eventos.id')
+            ->where('proyectos.estado', '!=', 'BORRADO')
+            ->get()
+            ->map(function ($proyecto) {
+                // Obtener los miembros del proyecto con información de la persona
+                $miembros = MiembrosProyecto::select(
+                        'miembros_proyecto.id',
+                        'miembros_proyecto.persona_id',
+                        'miembros_proyecto.rol_id',
+                        'personas.nombre',
+                        'personas.apellido'
+                    )
+                    ->join('personas', 'miembros_proyecto.persona_id', '=', 'personas.id')
+                    ->where('miembros_proyecto.proyecto_id', $proyecto->id)
+                    ->get();
+
+                // Buscar logo del proyecto usando la tabla intermedia archivo_proyecto
+                // CORRECCIÓN: Usar 'archivo' en lugar de 'archivos'
+                $logoUrl = null;
+                $archivo = DB::table('archivo')
+                    ->join('archivo_proyecto', 'archivo.id', '=', 'archivo_proyecto.archivo_id')
+                    ->where('archivo_proyecto.proyecto_id', $proyecto->id)
+                    ->where('archivo.estado_borrado', false)
+                    ->where('archivo.tipo', 'LIKE', '%logo%') // O el criterio que uses para logos
+                    ->select('archivo.url')
+                    ->first();
+
+                if ($archivo) {
+                    $logoUrl = $archivo->url;
+                }
+
+                return [
+                    'id' => $proyecto->id,
+                    'titulo' => $proyecto->titulo,
+                    'descripcion' => $proyecto->descripcion,
+                    'fecha_inicio' => $proyecto->fecha_inicio,
+                    'fecha_fin' => $proyecto->fecha_fin,
+                    'estado' => $proyecto->estado,
+                    'equipo_id' => $proyecto->equipo_id,
+                    'equipo_nombre' => $proyecto->equipo_nombre,
+                    'evento_id' => $proyecto->evento_id,
+                    'evento_nombre' => $proyecto->evento_nombre,
+                    'logoUrl' => $logoUrl,
+                    'miembros' => $miembros->toArray()
+                ];
+            });
+
+        return response()->json($proyectos);
+    }
+
+    /**
+     * Obtener un proyecto específico con información completa
+     */
+     /**
+     * Obtener proyecto completo por ID
+     */
+    public function getProyectoCompleto(Request $request, $id)
+    {
+        $proyecto = Proyecto::with([
+                'equipo.evento',
+                'miembros.persona',
+                'archivos'
+            ])
+            ->where('id', $id)
+            ->where('estado', '!=', 'BORRADO')
+            ->first();
+
+        if (!$proyecto) {
+            return response()->json(['message' => 'Proyecto no encontrado'], 404);
+        }
+
+        $logo = $proyecto->archivos->firstWhere('tipo', 'like', '%logo%');
+
+        $proyectoCompleto = [
+            'id' => $proyecto->id,
+            'titulo' => $proyecto->titulo,
+            'descripcion' => $proyecto->descripcion,
+            'fecha_inicio' => $proyecto->fecha_inicio,
+            'fecha_fin' => $proyecto->fecha_fin,
+            'estado' => $proyecto->estado,
+            'equipo_id' => $proyecto->equipo_id,
+            'equipo_nombre' => $proyecto->equipo?->nombre,
+            'evento_id' => $proyecto->equipo?->evento?->id,
+            'evento_nombre' => $proyecto->equipo?->evento?->nombre,
+            'logoUrl' => $logo ? $logo->url : null,
+            'miembros' => $proyecto->miembros->map(fn($m) => [
+                'id' => $m->id,
+                'persona_id' => $m->persona_id,
+                'rol_id' => $m->rol_id,
+                'nombre' => $m->persona?->nombre,
+                'apellido' => $m->persona?->apellido,
+            ]),
+        ];
+
+        return response()->json($proyectoCompleto);
+    }
+
+    /**
+     * Obtener proyectos completos por evento
+     */
+    public function getProyectosPorEventoCompleto(Request $request, $eventoId)
+    {
+        $evento = Evento::find($eventoId);
+
+        if (!$evento) {
+            return response()->json(['message' => 'Evento no encontrado'], 404);
+        }
+
+        $proyectos = Proyecto::with([
+                'equipo.evento',
+                'miembros.persona',
+                'archivos'
+            ])
+            ->whereHas('equipo', fn($q) => $q->where('evento_id', $eventoId))
+            ->where('estado', '!=', 'BORRADO')
+            ->get()
+            ->map(function ($proyecto) {
+                $logo = $proyecto->archivos->firstWhere('tipo', 'like', '%logo%');
+
+                return [
+                    'id' => $proyecto->id,
+                    'titulo' => $proyecto->titulo,
+                    'descripcion' => $proyecto->descripcion,
+                    'fecha_inicio' => $proyecto->fecha_inicio,
+                    'fecha_fin' => $proyecto->fecha_fin,
+                    'estado' => $proyecto->estado,
+                    'equipo_id' => $proyecto->equipo_id,
+                    'equipo_nombre' => $proyecto->equipo?->nombre,
+                    'evento_id' => $proyecto->equipo?->evento?->id,
+                    'evento_nombre' => $proyecto->equipo?->evento?->nombre,
+                    'logoUrl' => $logo ? $logo->url : null,
+                    'miembros' => $proyecto->miembros->map(fn($m) => [
+                        'id' => $m->id,
+                        'persona_id' => $m->persona_id,
+                        'rol_id' => $m->rol_id,
+                        'nombre' => $m->persona?->nombre,
+                        'apellido' => $m->persona?->apellido,
+                    ]),
+                ];
+            });
+
+        return response()->json($proyectos);
+    }
+
+    /**
+     * Obtener todos los archivos de un proyecto
+     */
+    public function getArchivosProyecto(Request $request, $proyectoId)
+    {
+        $proyecto = Proyecto::find($proyectoId);
+
+        if (!$proyecto) {
+            return response()->json(['message' => 'Proyecto no encontrado'], 404);
+        }
+
+        // CORRECCIÓN: Usar 'archivo' en lugar de 'archivos'
+        $archivos = DB::table('archivo')
+            ->join('archivo_proyecto', 'archivo.id', '=', 'archivo_proyecto.archivo_id')
+            ->where('archivo_proyecto.proyecto_id', $proyectoId)
+            ->where('archivo.estado_borrado', false)
+            ->select(
+                'archivo.id',
+                'archivo.url',
+                'archivo.tipo',
+                'archivo.creado_en'
+            )
+            ->get();
+
+        return response()->json([
+            'proyecto_id' => $proyectoId,
+            'archivos' => $archivos
+        ]);
     }
 
 }
