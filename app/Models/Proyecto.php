@@ -53,7 +53,7 @@ class Proyecto extends Model
 		'fecha_fin'
 	];
 
-    public function equipo()
+     public function equipo()
     {
         return $this->belongsTo(Equipo::class);
     }
@@ -62,13 +62,22 @@ class Proyecto extends Model
     {
         return $this->hasOneThrough(Evento::class, Equipo::class, 'id', 'id', 'equipo_id', 'evento_id');
     }
-	public function archivos()
-	{
-		return $this->belongsToMany(Archivo::class);
-	}
 
-	public function miembros_proyectos()
-	{
-		return $this->hasMany(MiembrosProyecto::class);
-	}
+    public function miembros()
+    {
+        return $this->hasMany(MiembrosProyecto::class);
+    }
+
+    public function archivos()
+    {
+        return $this->belongsToMany(Archivo::class, 'archivo_proyecto')
+                    ->where('estado_borrado', false);
+    }
+
+    public function logo()
+    {
+        return $this->archivos()
+                    ->whereIn('tipo', ['png', 'jpg', 'jpeg', 'webp'])
+                    ->limit(1);
+    }
 }
