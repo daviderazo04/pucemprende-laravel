@@ -55,8 +55,10 @@ class EquipoController extends Controller
     {
         return response()->json($equipo);
     }
+
+
     // funcion para obtener equipos por id de evento
-    public function getEquiposByEventoId( Request $request,$eventoId){
+    /*public function getEquiposByEventoId( Request $request,$eventoId){
 
         // Verificar si el usuario tiene permisos para ver los equipos admin o superadmin
         if($request->user()->rol_id != 1 && $request->user()->rol_id != 8){
@@ -99,7 +101,24 @@ class EquipoController extends Controller
 
         // Retornar los equipos agrupados como respuesta en formato JSON
         return response()->json($equiposAgrupados);
+    }*/
+
+    // funcion para obtener equipos por id de evento
+    public function getEquiposByEventoId(Request $request, $eventoId)
+    {
+        // Verificar permisos
+        if($request->user()->rol_id != 1 && $request->user()->rol_id != 8 && $request->user()->rol_id != 2){
+            return response()->json(['message'=>'No tienes permiso para ver equipos'], 403);
+        }
+
+        // Obtener equipos del evento
+        $equipos = Equipo::where('evento_id', $eventoId)
+            ->where('estado_borrado', false)
+            ->get();
+
+        return response()->json($equipos);
     }
+
     /**
      * Update the specified resource in storage.
      */
