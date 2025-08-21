@@ -37,10 +37,10 @@ class EventoRolPersonaController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        /* Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8 ) {
             return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
-        }
+        }*/
 
         $persona = Persona::where('users_id', $request->user()->id)->first();
 
@@ -57,9 +57,9 @@ class EventoRolPersonaController extends Controller
             ->where('estado_borrado', false)
             ->exists();
 
-        if (!$isSystemAdmin && !$isEventAuthor) {
+        /*if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para crear este elemento.'], 403);
-        }
+        }*/
 
         $validator = Validator::make($request->all(), [
             'evento_id' => 'required|integer|exists:eventos,id',
@@ -232,7 +232,7 @@ class EventoRolPersonaController extends Controller
         return response()->json($resultado);
     }
 
-    public function getByIdEventoPersona(Request $request, $idEvento,$idPersona)
+    public function getByIdEventoPersona(Request $request, $idEvento, $idPersona)
     {
         // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema) && usuario autenticado
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
