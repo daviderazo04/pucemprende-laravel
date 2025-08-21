@@ -234,8 +234,8 @@ class EventoRolPersonaController extends Controller
 
     public function getByIdEventoPersona(Request $request, $idEvento,$idPersona)
     {
-        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema) && usuario autenticado
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
