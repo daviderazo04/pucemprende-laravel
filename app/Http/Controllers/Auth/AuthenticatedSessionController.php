@@ -35,6 +35,17 @@ class AuthenticatedSessionController extends Controller
         // Usuario autenticado correctamente
         $user = Auth::user();
 
+        // Verificar si el usuario está activo (estado_borrado debe ser false)
+        if ($user->estado_borrado) {
+        // Cerrar la sesión si el usuario está inactivo
+        Auth::logout();
+        
+        return response()->json([
+            'message' => 'El usuario está inactivo.',
+            'errors' => ['email' => ['El usuario está inactivo.']]
+        ], 403);
+    }
+
         // Crear token con Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -78,7 +89,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
-        // Si deseas revocar tokens en un API stateless
+        // Si se deseas revocar tokens en un API stateless
         $request->user()->tokens()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
