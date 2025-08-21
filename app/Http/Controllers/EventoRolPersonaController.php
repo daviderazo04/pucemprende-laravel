@@ -256,10 +256,10 @@ class EventoRolPersonaController extends Controller
      */
     public function destroy(Request $request, EventoRolPersona $eventoRolPersona)
     {
-        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        /* Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar un rol de persona en un evento.'], 403);
-        }
+        }*/
 
         $persona = Persona::where('users_id', $request->user()->id)->first();
 
@@ -271,7 +271,7 @@ class EventoRolPersonaController extends Controller
 
         // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
-        $isSystemAdmin = ($request->user()->rol_id == 8);
+        /*$isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento_id)
             ->where('persona_id', $persona->id)
             ->where('rol_id', 1)
@@ -280,7 +280,7 @@ class EventoRolPersonaController extends Controller
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para borrar este elemento.'], 403);
-        }
+        }*/
 
         // Intenta eliminar el documento
         try {
