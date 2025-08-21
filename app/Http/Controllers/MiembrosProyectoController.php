@@ -260,4 +260,27 @@ class MiembrosProyectoController extends Controller
             return response()->json(['message' => 'Error al eliminar el miembro del proyecto.', 'error' => $e->getMessage()], 500);
         }
     }
+    public function salirProyecto(Request $request, $idPersona, $idProyecto)
+    {
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $miembrosProyecto = MiembrosProyecto::where('persona_id', $idPersona)
+            ->where('proyecto_id', $idProyecto)
+            ->first();
+
+        if (!$miembrosProyecto) {
+            return response()->json(['error' => 'Miembro del proyecto no encontrado'], 404);
+        }
+
+        // Verificar si la persona es el líder del proyecto
+        if ($miembrosProyecto->rol_id == 1) {
+            return response()->json(['error' => 'No puedes salir del proyecto siendo el líder.'], 403);
+        }
+        // Lógica para que un miembro salga del proyecto
+        $miembrosProyecto->delete();
+        return response()->json(['message' => 'Has salido del proyecto correctamente.']);
+    }
 }

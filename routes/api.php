@@ -96,6 +96,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/proyectos-completos', [ProyectoController::class, 'getProyectosCompletos']);
     Route::get('/proyectos-completos/{id}', [ProyectoController::class, 'getProyectoCompleto']);
     Route::get('/proyectos-completos/evento/{eventoId}', [ProyectoController::class, 'getProyectosPorEventoCompleto']);
+    Route::delete('/miembros-proyecto/salir/{idPersona}/{idProyecto}', [MiembrosProyectoController::class, 'salirProyecto']);
 
     // Rutas - Miembros de proyecto
     Route::apiResource('miembros-proyecto', MiembrosProyectoController::class);
