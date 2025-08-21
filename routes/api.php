@@ -150,6 +150,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/evento-rol-persona/{eventoRolPersona}/borrar', [EventoRolPersonaController::class, 'destroy']);
     Route::patch('/evento-rol-persona/{eventoRolPersona}/activar', [EventoRolPersonaController::class, 'activar']);
     Route::apiResource('evento-rol-persona', EventoRolPersonaController::class);
+    Route::get('/evento-rol-persona/{eventoId}/{personaId}', [EventoRolPersonaController::class, 'getByIdEventoPersona']);
 
     //Rutas - Roles de Evento
     Route::apiResource('rolEvento', RolEventoController::class);

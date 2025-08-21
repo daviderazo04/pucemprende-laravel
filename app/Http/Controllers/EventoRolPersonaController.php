@@ -232,7 +232,24 @@ class EventoRolPersonaController extends Controller
         return response()->json($resultado);
     }
 
+    public function getByIdEventoPersona(Request $request, $idEvento,$idPersona)
+    {
+        // Solo permitir si el usuario tiene rol_id = 1 (si es autor) o rol_id = 8 (administrador del sistema)
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
+        }
 
+        // Buscar el rol de persona en evento por ID de evento y persona
+        $eventoRolPersona = EventoRolPersona::where('evento_id', $idEvento)->where('persona_id', $idPersona)->first();
+
+        // Verificar si el rol existe
+        if (!$eventoRolPersona) {
+            return response()->json(['message' => 'Rol de persona en evento no encontrado'], 404);
+        }
+
+        // Retornar el rol encontrado
+        return response()->json($eventoRolPersona);
+    }
 
     /**
      * Remove the specified resource from storage.
