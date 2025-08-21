@@ -47,14 +47,16 @@ class ResultadoEvaluacionController extends Controller
             'puntaje' => 'required|numeric|min:0',
             'comentarios' => 'nullable|string',
             'rolEvento_id' => 'required|integer|exists:rolEvento,id',
+            'plantilla_id' => 'required|integer|exists:plantillasEvaluacion,id',
         ]);
 
-        $califica= RolesPlantilla::where('rol_id', $request->rolEvento_id)
+        // Verificar si el rol tiene permiso para calificar en esta plantilla
+        $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
             ->where('plantilla_id', $request->plantilla_id)
             ->first();
-        // Solo permitir si el usuario es superadmin (8), adminEvento (1), gestorEvento (2), mentor (3), jurado (5)
+
         if (!$califica) {
-            return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
+            return response()->json(['message' => 'El rol de evento no tiene permiso para calificar en esta plantilla.'], 403);
         }
 
         if ($validator->fails()) {
