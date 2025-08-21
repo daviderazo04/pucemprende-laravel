@@ -21,7 +21,7 @@ class RolesPlantillaController extends Controller
     {
         // Verificar que solo los superadministradores pueden acceder
         // rol_id = 8 corresponde a Superadministrador
-        if ($request->user()->rol_id !== 8) {
+        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
@@ -38,7 +38,7 @@ class RolesPlantillaController extends Controller
     public function getPlantillaById(Request $request, $id)
     {
         // Control de acceso: solo superadministradores
-        if ($request->user()->rol_id !== 8) {
+        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
             return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
         }
 
