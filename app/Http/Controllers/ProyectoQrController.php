@@ -64,7 +64,7 @@ class ProyectoQrController extends Controller
         }
 
         // Generar el QR
-        $urlFrontend = "https://pucemprende.netlify.app/calificar-proyecto/" . $proyecto->id;
+        $urlFrontend = "http://127.0.0.1:3000/calificar-proyecto/" . $proyecto->id;
         $qr = QrCode::format('svg')->size(300)->generate($urlFrontend);
         $base64 = base64_encode($qr);
 
