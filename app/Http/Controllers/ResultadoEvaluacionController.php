@@ -47,8 +47,12 @@ class ResultadoEvaluacionController extends Controller
             'comentarios' => 'nullable|string',
             'rolEvento_id' => 'required|integer|exists:rolEvento,id',
         ]);
+
+        $califica= RolesPlantilla::where('rol_id', $request->rolEvento_id)
+            ->where('plantilla_id', $request->plantilla_id)
+            ->first();
         // Solo permitir si el usuario es superadmin (8), adminEvento (1), gestorEvento (2), mentor (3), jurado (5)
-        if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 1 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 5) {
+        if ($califica) {
             return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
         }
 
