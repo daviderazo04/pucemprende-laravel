@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ResultadoRubrica;
 use App\Models\Persona;
+use App\Models\RolesPlantilla;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -40,10 +41,15 @@ class ResultadoRubricaController extends Controller
             'plantilla_id' => 'required|exists:plantillas_evaluacion,id',
             'equipo_id' => 'nullable|exists:equipos,id',
             'rolEvento_id' => 'required|integer|exists:rolEvento,id',
+            'plantilla_id' => 'required|integer|exists:plantillas_evaluacion,id',
         ]);
-        // Solo permitir si el usuario es superadmin (8), adminEvento (1), gestorEvento (2), mentor (3), jurado (5)
-        if ($request->user()->rol_id !== 8 && $request->rolEvento_id !== 1 && $request->rolEvento_id !== 2 && $request->rolEvento_id !== 3 && $request->rolEvento_id !== 5) {
-            return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
+        // Verificar si el rol tiene permiso para calificar en esta plantilla
+        $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
+            ->where('plantilla_id', $request->plantilla_id)
+            ->first();
+
+        if (!$califica) {
+            return response()->json(['message' => 'El rol de evento no tiene permiso para calificar en este resultado rubrica.'], 403);
         }
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
