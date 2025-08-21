@@ -47,7 +47,7 @@ class ResultadoEvaluacionController extends Controller
             'puntaje' => 'required|numeric|min:0',
             'comentarios' => 'nullable|string',
             'rolEvento_id' => 'required|integer|exists:rolEvento,id',
-            'plantilla_id' => 'required|integer|exists:plantillasEvaluacion,id',
+            'plantilla_id' => 'required|integer|exists:plantillas_evaluacion,id',
         ]);
 
         // Verificar si el rol tiene permiso para calificar en esta plantilla
