@@ -43,10 +43,10 @@ class RolesPlantillaController extends Controller
         }
 
         // Buscar el rol de plantilla por ID de plantilla
-        $plantilla = PlantillasEvaluacion::find($id);
+        $plantilla = RolesPlantilla::where('plantilla_id', $id)->get();
 
         // Verificar si el rol existe
-        if (!$plantilla) {
+        if ($plantilla->isEmpty()) {
             return response()->json(['message' => 'Rol plantilla no encontrado'], 404);
         }
 
@@ -66,7 +66,7 @@ class RolesPlantillaController extends Controller
         // Validar los datos de entrada
         $validator = Validator::make($request->all(), [
             'plantilla_id' => 'required|integer|exists:plantillas_evaluacion,id',
-            'rol_id' => 'required|integer|exists:roles,id',
+            'rol_id' => 'required|integer|exists:rolEvento,id',
         ]);
         // Excepcion si hay errores de validación
         if ($validator->fails()) {
@@ -96,7 +96,7 @@ class RolesPlantillaController extends Controller
         // Validar los datos de entrada
         $validator = Validator::make($request->all(), [
             'plantilla_id' => 'required|integer|exists:plantillas_evaluacion,id',
-            'rol_id' => 'required|integer|exists:roles,id',
+            'rol_id' => 'required|integer|exists:rolEvento,id',
         ]);
         // Excepcion si hay errores de validación
         if ($validator->fails()) {
