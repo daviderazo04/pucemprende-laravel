@@ -6,6 +6,7 @@ use App\Models\ResultadosEvaluacion;
 use App\Models\Criterio;
 use App\Models\RolEvento;
 use App\Models\Persona;
+use App\Models\RolesPlantilla;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +53,7 @@ class ResultadoEvaluacionController extends Controller
             ->where('plantilla_id', $request->plantilla_id)
             ->first();
         // Solo permitir si el usuario es superadmin (8), adminEvento (1), gestorEvento (2), mentor (3), jurado (5)
-        if ($califica) {
+        if (!$califica) {
             return response()->json(['message' => 'No tienes permiso para crear resultados de evaluación.'], 403);
         }
 
