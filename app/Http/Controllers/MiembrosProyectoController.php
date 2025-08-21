@@ -233,13 +233,21 @@ class MiembrosProyectoController extends Controller
         // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
+        $isProjectLeader = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
+        $isUserMember = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 3) // rol_id 3 para miembro
+            ->exists();
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
                                         ->where('rol_id', 1)
                                         ->where('estado_borrado', false)
                                         ->exists();
 
-        $hasPermission = $isSystemAdmin || $isEventAuthor;
+        $hasPermission = $isSystemAdmin || $isEventAuthor || $isProjectLeader || $isUserMember;
 
         if (!$hasPermission) {
             return response()->json(['message' => 'No tienes permiso para eliminar miembros del proyecto.'], 403);

@@ -19,11 +19,6 @@ class RolesPlantillaController extends Controller
      */
     public function index(Request $request)
     {
-        // Verificar que solo los superadministradores pueden acceder
-        // rol_id = 8 corresponde a Superadministrador
-        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
-            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
-        }
 
         // Obtener todos los roles de plantilla de la base de datos
         $rolesPlantilla = RolesPlantilla::all();
@@ -37,10 +32,6 @@ class RolesPlantillaController extends Controller
      */
     public function getPlantillaById(Request $request, $id)
     {
-        // Control de acceso: solo superadministradores
-        if ($request->user()->rol_id !== 8 && $request->user()->rol_id !== 2) {
-            return response()->json(['message' => 'No tienes permiso para acceder a este elemento'], 403);
-        }
 
         // Buscar el rol de plantilla por ID de plantilla
         $plantilla = RolesPlantilla::where('plantilla_id', $id)->get();
