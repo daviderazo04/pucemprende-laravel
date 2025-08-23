@@ -52,21 +52,20 @@ class ProyectoController extends Controller
 
         // Verificar si el usuario tiene rol_id = 1 (administrador del sistema)
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
-        $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
-        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+        /*$isRegistered = EventoRolPersona::where('evento_id', $evento->id)
                                         ->where('persona_id', $persona->id)
                                         ->where('estado_borrado', false)
-                                        ->exists();
+                                        ->exists();*/
 
-        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
+        /*if (!$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para crear un proyecto ya que no estás inscrito al evento.'], 403);
-        }
+        }*/
 
         $validator = Validator::make($request->all(), [
             'equipo_id' => 'nullable|integer|exists:equipos,id',
@@ -142,15 +141,15 @@ class ProyectoController extends Controller
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
         $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('estado_borrado', false)
+            ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
             return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
@@ -211,10 +210,10 @@ class ProyectoController extends Controller
         // O si la persona es el autor del evento (rol_id = 1 para este evento en evento_rol_persona)
         $isSystemAdmin = ($request->user()->rol_id == 8);
         $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
-                                        ->where('persona_id', $persona->id)
-                                        ->where('rol_id', 1)
-                                        ->where('estado_borrado', false)
-                                        ->exists();
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
 
         if (!$isSystemAdmin && !$isEventAuthor) {
             return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
@@ -252,17 +251,17 @@ class ProyectoController extends Controller
     public function ProyectosConEventos(Request $request)
     {
         $proyectos = Proyecto::select(
-                'eventos.id as evento_id',
-                'proyectos.id as proyecto_id',
-                'proyectos.creado_en',
-                'proyectos.actualizado_en',
-                'proyectos.equipo_id',
-                'proyectos.titulo',
-                'proyectos.descripcion',
-                'proyectos.estado',
-                'proyectos.fecha_inicio',
-                'proyectos.fecha_fin'
-            )
+            'eventos.id as evento_id',
+            'proyectos.id as proyecto_id',
+            'proyectos.creado_en',
+            'proyectos.actualizado_en',
+            'proyectos.equipo_id',
+            'proyectos.titulo',
+            'proyectos.descripcion',
+            'proyectos.estado',
+            'proyectos.fecha_inicio',
+            'proyectos.fecha_fin'
+        )
             ->join('equipos', 'proyectos.equipo_id', '=', 'equipos.id')
             ->join('eventos', 'equipos.evento_id', '=', 'eventos.id')
             ->get();
@@ -273,14 +272,14 @@ class ProyectoController extends Controller
     /**
      * Obtener proyectos con información completa incluyendo equipo, evento y miembros
      */
-   public function getProyectosCompletos(Request $request)
+    public function getProyectosCompletos(Request $request)
     {
         $proyectos = Proyecto::with([
-                'equipo',
-                'evento',
-                'miembros.persona',
-                'logo'
-            ])
+            'equipo',
+            'evento',
+            'miembros.persona',
+            'logo'
+        ])
             ->where('estado', '!=', 'BORRADO')
             ->get()
             ->map(function ($proyecto) {
@@ -317,11 +316,11 @@ class ProyectoController extends Controller
     public function getProyectoCompleto(Request $request, $proyectoId)
     {
         $proyecto = Proyecto::with([
-                'equipo',
-                'evento',
-                'miembros.persona',
-                'logo'
-            ])
+            'equipo',
+            'evento',
+            'miembros.persona',
+            'logo'
+        ])
             ->where('id', $proyectoId)
             ->where('estado', '!=', 'BORRADO')
             ->first();
@@ -355,7 +354,4 @@ class ProyectoController extends Controller
 
         return response()->json($proyectoCompleto);
     }
-
-
-
 }
