@@ -465,4 +465,190 @@ class ProyectoController extends Controller
             ], 500);
         }
     }
+
+
+    /**
+     * Determinar el tipo de permiso que tiene el usuario sobre un proyecto
+     */
+    private function getTipoPermiso($proyecto, $persona, $user)
+    {
+        // Superadministrador
+        if ($user->rol_id == 8) {
+            return 'superadministrador';
+        }
+
+        // Verificar si es miembro del proyecto
+        $esMiembroProyecto = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->exists();
+
+        if ($esMiembroProyecto) {
+            // Verificar si es líder del proyecto
+            $esLiderProyecto = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+                ->where('persona_id', $persona->id)
+                ->where('rol_id', 1)
+                ->exists();
+
+            return $esLiderProyecto ? 'lider_proyecto' : 'miembro_proyecto';
+        }
+
+        // Verificar si es autor del evento (si el proyecto tiene evento)
+        if ($proyecto->evento) {
+            $isEventAuthor = EventoRolPersona::where('evento_id', $proyecto->evento->id)
+                ->where('persona_id', $persona->id)
+                ->where('rol_id', 1)
+                ->where('estado_borrado', false)
+                ->exists();
+
+            if ($isEventAuthor) {
+                return 'autor_evento';
+            }
+
+            // Verificar si está registrado en el evento
+            $isRegistered = EventoRolPersona::where('evento_id', $proyecto->evento->id)
+                ->where('persona_id', $persona->id)
+                ->where('estado_borrado', false)
+                ->exists();
+
+            if ($isRegistered) {
+                return 'participante_evento';
+            }
+        }
+
+        return 'sin_permiso';
+    }
+
+/**
+ * Verificar si el usuario puede editar un proyecto específico
+ */
+    public function canEditProject(Request $request, $proyectoId)
+    {
+        $user = $request->user();
+        $persona = Persona::where('users_id', $user->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::with(['equipo', 'evento'])->find($proyectoId);
+
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        // Si es superadministrador
+        if ($user->rol_id == 8) {
+            return response()->json([
+                'puede_editar' => true,
+                'motivo' => 'superadministrador',
+                'proyecto_id' => $proyectoId
+            ]);
+        }
+
+        // Verificar si es miembro del proyecto
+        $esMiembroProyecto = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->exists();
+
+        if ($esMiembroProyecto) {
+            return response()->json([
+                'puede_editar' => true,
+                'motivo' => 'miembro_proyecto',
+                'proyecto_id' => $proyectoId
+            ]);
+        }
+
+        $equipo = $proyecto->equipo;
+        $evento = $proyecto->evento;
+
+        if (!$equipo || !$evento) {
+            return response()->json([
+                'puede_editar' => false,
+                'motivo' => 'datos_incompletos',
+                'proyecto_id' => $proyectoId
+            ]);
+        }
+
+        // Verificar si es autor del evento
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
+
+        if ($isEventAuthor) {
+            return response()->json([
+                'puede_editar' => true,
+                'motivo' => 'autor_evento',
+                'proyecto_id' => $proyectoId
+            ]);
+        }
+
+        // Verificar si está registrado en el evento
+        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('estado_borrado', false)
+            ->exists();
+
+        if ($isRegistered) {
+            return response()->json([
+                'puede_editar' => true,
+                'motivo' => 'participante_evento',
+                'proyecto_id' => $proyectoId
+            ]);
+        }
+
+        return response()->json([
+            'puede_editar' => false,
+            'motivo' => 'sin_permisos',
+            'proyecto_id' => $proyectoId
+        ]);
+    }
+
+    /**
+     * Obtener solo los IDs de proyectos que el usuario puede editar
+     */
+    public function getProyectosEditablesIds(Request $request)
+    {
+        $user = $request->user();
+        $persona = Persona::where('users_id', $user->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Si es superadministrador, puede editar todos los proyectos
+        if ($user->rol_id == 8) {
+            $proyectoIds = Proyecto::where('estado', '!=', 'BORRADO')
+                ->pluck('id')
+                ->toArray();
+        } else {
+            // Para usuarios normales, obtener proyectos donde el usuario tenga permisos
+            $proyectoIds = Proyecto::where('estado', '!=', 'BORRADO')
+                ->where(function($query) use ($persona) {
+                    // Proyectos donde es miembro
+                    $query->whereHas('miembros', function($miembrosQuery) use ($persona) {
+                        $miembrosQuery->where('persona_id', $persona->id);
+                    })
+                    // O proyectos de eventos donde está registrado
+                    ->orWhereHas('equipo', function($equipoQuery) use ($persona) {
+                        $equipoQuery->whereHas('evento', function($eventoQuery) use ($persona) {
+                            $eventoQuery->whereExists(function($subQuery) use ($persona) {
+                                $subQuery->select(DB::raw(1))
+                                        ->from('evento_rol_persona')
+                                        ->whereColumn('evento_rol_persona.evento_id', 'eventos.id')
+                                        ->where('evento_rol_persona.persona_id', $persona->id)
+                                        ->where('evento_rol_persona.estado_borrado', false);
+                            });
+                        });
+                    });
+                })
+                ->pluck('id')
+                ->toArray();
+        }
+
+        return response()->json([
+            'proyecto_ids' => $proyectoIds,
+        ]);
+    }
 }

@@ -96,6 +96,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('proyecto/delete/{id}', [ProyectoController::class, 'destroyComplete']);
 
     Route::apiResource('proyecto', ProyectoController::class);
+    // Rutas para obtener proyectos editables
+    Route::get('proyectos/editables', [ProyectoController::class, 'getProyectosEditablesIds']);
+    Route::get('proyectos/editables/paginados', [ProyectoController::class, 'getProyectosEditablesPaginados']);
+    Route::get('proyectos/{id}/can-edit', [ProyectoController::class, 'canEditProject']);
+
 
     Route::get('/proyectos-completos', [ProyectoController::class, 'getProyectosCompletos']);
     Route::get('/proyectos-completos/{id}', [ProyectoController::class, 'getProyectoCompleto']);
@@ -229,6 +234,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
 });
+
 
 
 
