@@ -211,7 +211,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/usuario/estadisticas/{id}', [UserController::class, 'getUserEstadisticas']);
     Route::apiResource('usuario', App\Http\Controllers\UserController::class);
 
-    // Ruta certificados
+
+    // Rutas - Certificados 
+    Route::post('/eventos/{eventoId}/certificados', [CertificadosController::class, 'store']);
+    Route::get('/eventos/{eventoId}/certificados', [CertificadosController::class, 'getCertificadosPorEvento']);
+    Route::get('/eventos/{eventoId}/personas/{personaId}/certificados', [CertificadosController::class, 'getCertificadosPersonaEvento']);
+    Route::get('/eventos/{eventoId}/personas/{personaId}/certificados/{certificadoId}/descargar', [CertificadosController::class, 'descargarCertificado']);
+
+    // NUEVAS RUTAS - Mis certificados (usuario autenticado)
+    Route::get('/eventos/{eventoId}/mis-certificados', [CertificadosController::class, 'misCertificados']);
+    Route::get('/eventos/{eventoId}/mis-certificados/{certificadoId}/descargar', [CertificadosController::class, 'descargarMiCertificado']);
+    // Ruta certificados 
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
 });

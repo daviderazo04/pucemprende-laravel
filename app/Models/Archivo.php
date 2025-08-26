@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string|null $url
  * @property string|null $tipo
+ * @property bool $es_certificado
+ * @property string|null $roles_destinatarios
  * @property Carbon|null $creado_en
  * @property Carbon|null $actualizado_en
  * @property bool $estado_borrado
@@ -28,32 +30,62 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Archivo extends Model
 {
-	protected $table = 'archivo';
-	public $timestamps = false;
+    protected $table = 'archivo';
+    public $timestamps = false;
 
-	protected $casts = [
-		'creado_en' => 'datetime',
-		'actualizado_en' => 'datetime',
-		'estado_borrado' => 'bool',
-		'borrado_en' => 'datetime'
-	];
+    protected $casts = [
+        'creado_en' => 'datetime',
+        'actualizado_en' => 'datetime',
+        'estado_borrado' => 'bool',
+        'borrado_en' => 'datetime',
+        'es_certificado' => 'bool'
+    ];
 
-	protected $fillable = [
-		'url',
-		'tipo',
-		'creado_en',
-		'actualizado_en',
-		'estado_borrado',
-		'borrado_en'
-	];
+    protected $fillable = [
+        'url',
+        'tipo',
+        'es_certificado',
+        'roles_destinatarios',
+        'creado_en',
+        'actualizado_en',
+        'estado_borrado',
+        'borrado_en'
+    ];
 
-	public function eventos()
-	{
-		return $this->belongsToMany(Evento::class);
-	}
+    public function eventos()
+    {
+        return $this->belongsToMany(Evento::class);
+    }
 
-	public function proyectos()
-	{
-		return $this->belongsToMany(Proyecto::class);
-	}
+    public function proyectos()
+    {
+        return $this->belongsToMany(Proyecto::class);
+    }
+
+    /**
+     * Obtener los roles destinatarios como array
+     */
+    public function getRolesDestinatariosArrayAttribute()
+    {
+        if (empty($this->roles_destinatarios)) {
+            return [];
+        }
+        return array_map('intval', explode(',', $this->roles_destinatarios));
+    }
+
+    /**
+     * Scope para obtener solo certificados
+     */
+    public function scopeCertificados($query)
+    {
+        return $query->where('es_certificado', true);
+    }
+
+    /**
+     * Scope para obtener archivos activos (no borrados)
+     */
+    public function scopeActivos($query)
+    {
+        return $query->where('estado_borrado', false);
+    }
 }
