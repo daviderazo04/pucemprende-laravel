@@ -359,8 +359,13 @@ class ProyectoController extends Controller
  */
         public function destroyComplete(Request $request, $id)
     {
+        $isLeaderProject = MiembrosProyecto::where('proyecto_id', $id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
+
         // Verificar permisos - solo superadministrador
-        if ($request->user()->rol_id !== 8) {
+        if ($request->user()->rol_id !== 8 && !$isLeaderProject) {
             return response()->json(['message' => 'No tienes permiso para eliminar proyectos completamente.'], 403);
         }
 
