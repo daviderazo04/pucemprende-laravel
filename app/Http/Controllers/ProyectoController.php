@@ -354,4 +354,110 @@ class ProyectoController extends Controller
 
         return response()->json($proyectoCompleto);
     }
+    /**
+ * Eliminar completamente un proyecto con todas sus relaciones
+ */
+        public function destroyComplete(Request $request, $id)
+    {
+        // Verificar permisos - solo superadministrador
+        if ($request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para eliminar proyectos completamente.'], 403);
+        }
+
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyecto = Proyecto::find($id);
+
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Guardar datos antes de eliminar para el response
+            $titulo = $proyecto->titulo;
+            $proyectoId = $proyecto->id;
+            $equipoId = $proyecto->equipo_id;
+
+            // 1. Eliminar archivos del proyecto y sus registros
+            $archivosProyecto = ArchivoProyecto::where('proyecto_id', $proyecto->id)->get();
+
+            foreach ($archivosProyecto as $archivoProyecto) {
+                // Buscar el archivo asociado
+                $archivo = Archivo::find($archivoProyecto->archivo_id);
+
+                if ($archivo) {
+                    // Eliminar archivo físico si existe
+                    $rutaArchivo = public_path($archivo->url);
+                    if (file_exists($rutaArchivo)) {
+                        unlink($rutaArchivo);
+                    }
+
+                    // Eliminar registro del archivo
+                    $archivo->delete();
+                }
+
+                // Eliminar la relación archivo_proyecto
+                $archivoProyecto->delete();
+            }
+
+            // 2. Eliminar miembros del proyecto
+            MiembrosProyecto::where('proyecto_id', $proyecto->id)->delete();
+
+            // 3. Obtener el equipo asociado al proyecto antes de eliminar el proyecto
+            $equipo = Equipo::find($proyecto->equipo_id);
+
+            // 4. PRIMERO eliminar el proyecto (esto libera la restricción de clave foránea)
+            $proyecto->delete();
+
+            // 5. Ahora verificar y eliminar el equipo si es necesario
+            if ($equipo) {
+                // Verificar si hay otros proyectos usando este equipo
+                $otrosProyectos = Proyecto::where('equipo_id', $equipo->id)
+                                        ->where('estado', '!=', 'BORRADO')
+                                        ->count();
+
+                // Si no hay otros proyectos activos usando este equipo, eliminarlo
+                if ($otrosProyectos === 0) {
+                    // Eliminar miembros del equipo antes de eliminar el equipo
+                    DB::table('miembros_equipo')->where('equipo_id', $equipo->id)->delete();
+
+                    // Ahora eliminar el equipo
+                    $equipo->delete();
+                    $equipoEliminado = $equipoId;
+                } else {
+                    $equipoEliminado = null; // No se eliminó el equipo porque tiene otros proyectos
+                }
+            } else {
+                $equipoEliminado = null;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Proyecto y todas sus relaciones eliminadas completamente.',
+                'proyecto_eliminado' => [
+                    'id' => $proyectoId,
+                    'titulo' => $titulo,
+                    'equipo_eliminado' => $equipoEliminado,
+                    'equipo_conservado' => $equipoEliminado === null && $equipo ? 'El equipo se conservó porque tiene otros proyectos asociados' : null
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'error' => 'Error al eliminar el proyecto',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
+    }
 }

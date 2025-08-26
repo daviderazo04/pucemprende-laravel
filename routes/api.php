@@ -92,7 +92,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas - Proyectos
     Route::get('proyecto/proyectosConEventos', [ProyectoController::class, 'ProyectosConEventos']);
     Route::get('proyecto/proyectosPorEvento/{evento_id}', [ProyectoController::class, 'ProyectosPorEvento']);
+
+    Route::delete('proyecto/delete/{id}', [ProyectoController::class, 'destroyComplete']);
+
     Route::apiResource('proyecto', ProyectoController::class);
+
     Route::get('/proyectos-completos', [ProyectoController::class, 'getProyectosCompletos']);
     Route::get('/proyectos-completos/{id}', [ProyectoController::class, 'getProyectoCompleto']);
     Route::get('/proyectos-completos/evento/{eventoId}', [ProyectoController::class, 'getProyectosPorEventoCompleto']);
@@ -212,7 +216,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('usuario', App\Http\Controllers\UserController::class);
 
 
-    // Rutas - Certificados 
+    // Rutas - Certificados
     Route::post('/eventos/{eventoId}/certificados', [CertificadosController::class, 'store']);
     Route::get('/eventos/{eventoId}/certificados', [CertificadosController::class, 'getCertificadosPorEvento']);
     Route::get('/eventos/{eventoId}/personas/{personaId}/certificados', [CertificadosController::class, 'getCertificadosPersonaEvento']);
@@ -221,7 +225,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // NUEVAS RUTAS - Mis certificados (usuario autenticado)
     Route::get('/eventos/{eventoId}/mis-certificados', [CertificadosController::class, 'misCertificados']);
     Route::get('/eventos/{eventoId}/mis-certificados/{certificadoId}/descargar', [CertificadosController::class, 'descargarMiCertificado']);
-    // Ruta certificados 
+    // Ruta certificados
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
 });
