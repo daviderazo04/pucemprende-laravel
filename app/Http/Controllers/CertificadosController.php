@@ -624,4 +624,61 @@ class CertificadosController extends Controller
             ], 500);
         }
     }
+    public function forceDestroy(Request $request, $eventoId, $certificadoId)
+    {
+        try {
+            // Verificar permisos - solo super administradores
+            if($request->user()->rol_id != 1){
+                return response()->json(['message'=>'No tienes permiso para eliminar permanentemente certificados'], 403);
+            }
+
+            // Verificar que el evento exista
+            $evento = \App\Models\Evento::find($eventoId);
+            if (!$evento) {
+                return response()->json(['message' => 'Evento no encontrado'], 404);
+            }
+
+            // Buscar el certificado (incluso si está soft deleted)
+            $certificado = Archivo::join('archivo_evento', 'archivo.id', '=', 'archivo_evento.archivo_id')
+                ->where('archivo_evento.evento_id', $eventoId)
+                ->where('archivo.id', $certificadoId)
+                ->where('archivo.es_certificado', true)
+                ->select('archivo.*')
+                ->first();
+
+            if (!$certificado) {
+                return response()->json(['message' => 'Certificado no encontrado'], 404);
+            }
+
+            // Eliminar archivo físico del storage
+            $filePath = storage_path('app/public/' . $certificado->url);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // Eliminar registros de la base de datos
+            ArchivoEvento::where('archivo_id', $certificadoId)
+                ->where('evento_id', $eventoId)
+                ->delete();
+
+            $certificado->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificado eliminado permanentemente',
+                'certificado_eliminado' => [
+                    'id' => $certificadoId,
+                    'tipo' => $certificado->tipo,
+                    'evento_id' => $eventoId,
+                    'eliminado_permanentemente_en' => Carbon::now()->toDateTimeString()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al eliminar permanentemente el certificado',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

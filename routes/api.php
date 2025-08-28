@@ -233,6 +233,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Ruta certificados
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
+    Route::delete('/eventos/{eventoId}/certificados/{certificadoId}/permanente', [CertificadosController::class, 'forceDestroy']);
 });
 
 
