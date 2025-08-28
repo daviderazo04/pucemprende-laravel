@@ -45,7 +45,7 @@ class CertificadosController extends Controller
                 ->where('archivo.estado_borrado', false)
                 ->select('archivo.*')
                 ->get()
-                ->filter(function($certificado) use ($rolesPersona) {
+                ->filter(function ($certificado) use ($rolesPersona) {
                     // Convertir roles_destinatarios de string a array
                     $rolesDestinatarios = explode(',', $certificado->roles_destinatarios);
                     // Verificar si hay intersección entre los roles de la persona y los roles destinatarios
@@ -58,10 +58,10 @@ class CertificadosController extends Controller
 
             // Generar PDFs para cada certificado
             $certificadosGenerados = [];
-            
+
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -110,7 +110,6 @@ class CertificadosController extends Controller
                         'pdf_base64' => $pdfBase64,
                         'filename' => 'certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf'
                     ];
-
                 } catch (\Exception $e) {
                     // Log del error pero continuar con los otros certificados
                     continue;
@@ -133,7 +132,6 @@ class CertificadosController extends Controller
                 'certificados' => $certificadosGenerados,
                 'total_certificados' => count($certificadosGenerados)
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener los certificados',
@@ -188,7 +186,7 @@ class CertificadosController extends Controller
 
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -222,7 +220,6 @@ class CertificadosController extends Controller
             return response($pdf->Output('S'), 200)
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf"');
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al generar el certificado',
@@ -290,8 +287,8 @@ class CertificadosController extends Controller
     public function store(Request $request, $eventoId)
     {
         // Verificar permisos
-        if($request->user()->rol_id != 1 && $request->user()->rol_id != 8 && $request->user()->rol_id != 2){
-            return response()->json(['message'=>'No tienes permiso para subir certificados'], 403);
+        if ($request->user()->rol_id != 1 && $request->user()->rol_id != 8 && $request->user()->rol_id != 2) {
+            return response()->json(['message' => 'No tienes permiso para subir certificados'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -315,7 +312,7 @@ class CertificadosController extends Controller
             // Verificar que los roles existan y pertenezcan al evento
             $rolesArray = explode(',', $request->roles_destinatarios);
             $rolesValidos = \App\Models\RolEvento::whereIn('id', $rolesArray)->count();
-            
+
             if ($rolesValidos != count($rolesArray)) {
                 return response()->json(['message' => 'Uno o más roles no son válidos'], 400);
             }
@@ -323,11 +320,12 @@ class CertificadosController extends Controller
             // Subir archivo
             $file = $request->file('archivo');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('certificados', $fileName, 'public');
+            $filePath = Storage::disk('public')->putFileAs('certificados', $file, $fileName);
+            $publicUrl = asset('storage/' . $filePath);
 
             // Crear registro en tabla archivo
             $archivo = Archivo::create([
-                'url' => $filePath,
+                'url' => $publicUrl,
                 'tipo' => $request->tipo ?? 'certificado',
                 'es_certificado' => true,
                 'roles_destinatarios' => $request->roles_destinatarios, // "1,3,5"
@@ -357,7 +355,6 @@ class CertificadosController extends Controller
                     'descripcion' => $request->descripcion
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al subir el certificado',
@@ -379,7 +376,7 @@ class CertificadosController extends Controller
                 ->where('archivo.estado_borrado', false)
                 ->select('archivo.*')
                 ->get()
-                ->map(function($certificado) {
+                ->map(function ($certificado) {
                     return [
                         'id' => $certificado->id,
                         'tipo' => $certificado->tipo,
@@ -395,7 +392,6 @@ class CertificadosController extends Controller
                 'certificados' => $certificados,
                 'total' => $certificados->count()
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener los certificados',
@@ -440,7 +436,7 @@ class CertificadosController extends Controller
                 ->where('archivo.estado_borrado', false)
                 ->select('archivo.*')
                 ->get()
-                ->filter(function($certificado) use ($rolesPersona) {
+                ->filter(function ($certificado) use ($rolesPersona) {
                     // Convertir roles_destinatarios de string a array
                     $rolesDestinatarios = explode(',', $certificado->roles_destinatarios);
                     // Verificar si hay intersección entre los roles de la persona y los roles destinatarios
@@ -453,10 +449,10 @@ class CertificadosController extends Controller
 
             // Generar PDFs para cada certificado
             $certificadosGenerados = [];
-            
+
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -505,7 +501,6 @@ class CertificadosController extends Controller
                         'pdf_base64' => $pdfBase64,
                         'filename' => 'certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf'
                     ];
-
                 } catch (\Exception $e) {
                     // Log del error pero continuar con los otros certificados
                     continue;
@@ -528,7 +523,6 @@ class CertificadosController extends Controller
                 'certificados' => $certificadosGenerados,
                 'total_certificados' => count($certificadosGenerados)
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener tus certificados',
@@ -589,7 +583,7 @@ class CertificadosController extends Controller
 
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -623,7 +617,6 @@ class CertificadosController extends Controller
             return response($pdf->Output('S'), 200)
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf"');
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al generar el certificado',
