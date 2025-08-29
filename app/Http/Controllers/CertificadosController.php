@@ -69,8 +69,9 @@ class CertificadosController extends Controller
 
             foreach ($certificados as $certificado) {
                 try {
-                    // Generar PDF personalizado
-                    $pdfBasePath = storage_path('app/public/' . $certificado->url);
+                    // MODIFICADO: Convertir URL a path físico
+                    $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+                    $pdfBasePath = storage_path('app/public/' . $urlPath);
                     if (!file_exists($pdfBasePath)) {
                         continue; // Saltar este certificado si no existe el archivo
                     }
@@ -178,8 +179,9 @@ class CertificadosController extends Controller
                 return response()->json(['message' => 'La persona no tiene los roles requeridos para este certificado'], 403);
             }
 
-            // Generar PDF
-            $pdfBasePath = storage_path('app/public/' . $certificado->url);
+            // MODIFICADO: Convertir URL a path físico
+            $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+            $pdfBasePath = storage_path('app/public/' . $urlPath);
             if (!file_exists($pdfBasePath)) {
                 return response()->json(['message' => 'Archivo base no encontrado'], 404);
             }
@@ -460,8 +462,9 @@ class CertificadosController extends Controller
 
             foreach ($certificados as $certificado) {
                 try {
-                    // Generar PDF personalizado
-                    $pdfBasePath = storage_path('app/public/' . $certificado->url);
+                    // MODIFICADO: Convertir URL a path físico
+                    $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+                    $pdfBasePath = storage_path('app/public/' . $urlPath);
                     if (!file_exists($pdfBasePath)) {
                         continue; // Saltar este certificado si no existe el archivo
                     }
@@ -575,8 +578,9 @@ class CertificadosController extends Controller
                 return response()->json(['message' => 'No tienes los roles requeridos para este certificado'], 403);
             }
 
-            // Generar PDF
-            $pdfBasePath = storage_path('app/public/' . $certificado->url);
+            // MODIFICADO: Convertir URL a path físico
+            $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+            $pdfBasePath = storage_path('app/public/' . $urlPath);
             if (!file_exists($pdfBasePath)) {
                 return response()->json(['message' => 'Archivo base no encontrado'], 404);
             }
@@ -624,6 +628,7 @@ class CertificadosController extends Controller
             ], 500);
         }
     }
+    
     public function forceDestroy(Request $request, $eventoId, $certificadoId)
     {
         try {
@@ -650,8 +655,9 @@ class CertificadosController extends Controller
                 return response()->json(['message' => 'Certificado no encontrado'], 404);
             }
 
-            // Eliminar archivo físico del storage
-            $filePath = storage_path('app/public/' . $certificado->url);
+            // MODIFICADO: Convertir URL a path físico para eliminar archivo
+            $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+            $filePath = storage_path('app/public/' . $urlPath);
             if (file_exists($filePath)) {
                 unlink($filePath);
             }
