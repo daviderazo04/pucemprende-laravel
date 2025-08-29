@@ -4,9 +4,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\ResultadoProcesoEvaluacion;
-use App\Models\ResultadoPlantillaEvaluacion;
-use App\Models\ProcesoEvaluacion;
-use App\Models\PlantillaEvaluacion;
+use App\Models\ResultadoRubrica;
+use App\Models\ProcesosEvaluacion;
+use App\Models\PlantillasEvaluacion;
 use App\Models\Equipo;
 use App\Models\Persona;
 use Illuminate\Http\Request;
@@ -61,7 +61,7 @@ class ResultadoProcesoEvaluacionController extends Controller
         }
 
         // Verificar que el proceso existe
-        $proceso = ProcesoEvaluacion::find($request->proceso_id);
+        $proceso = ProcesosEvaluacion::find($request->proceso_id);
         if (!$proceso) {
             return response()->json(['error' => 'Proceso de evaluación no encontrado'], 404);
         }
@@ -73,11 +73,14 @@ class ResultadoProcesoEvaluacionController extends Controller
         }
 
         // Obtener plantillas del proceso con sus pesos
-        $plantillas = PlantillaEvaluacion::where('proceso_id', $request->proceso_id)->get();
+        $plantillas = PlantillasEvaluacion::whereIn('proceso_id', [$request->proceso_id])->get();
 
         if ($plantillas->isEmpty()) {
             return response()->json(['message' => 'No hay plantillas configuradas para este proceso'], 400);
         }
+        // else{
+        //     return response()->json(['plantillas' => $plantillas], 200);
+        // }
 
         // Verificar que los pesos de las plantillas suman 100%
         $sumaPesosPlantillas = $plantillas->sum('peso');
@@ -87,6 +90,9 @@ class ResultadoProcesoEvaluacionController extends Controller
                 'suma_actual' => $sumaPesosPlantillas
             ], 400);
         }
+        // else{
+        //     return response()->json(['plantillas' => $sumaPesosPlantillas], 200);
+        // }
 
         $detallesPlantillas = [];
         $totalProceso = 0;
@@ -94,37 +100,18 @@ class ResultadoProcesoEvaluacionController extends Controller
 
         foreach ($plantillas as $plantilla) {
             // Obtener resultado ya calculado de la plantilla
-            $resultadoPlantilla = ResultadoPlantillaEvaluacion::where('plantilla_id', $plantilla->id)
+            $resultadoPlantilla = ResultadoRubrica::where('plantilla_id', $plantilla->id)
                 ->where('equipo_id', $request->equipo_id)
                 ->first();
 
             if ($resultadoPlantilla) {
                 // Aplicar peso de la plantilla para el total del proceso
-                $contribucionPlantilla = ($resultadoPlantilla->puntaje * $plantilla->peso) / 100;
+                $contribucionPlantilla = ($resultadoPlantilla->total * ($plantilla->peso/100));
 
                 $totalProceso += $contribucionPlantilla;
                 $plantillasCalculadas++;
-
-                $detallesPlantillas[] = [
-                    'plantilla_id' => $plantilla->id,
-                    'plantilla_nombre' => $plantilla->nombre,
-                    'peso_plantilla' => $plantilla->peso,
-                    'puntaje_plantilla' => $resultadoPlantilla->puntaje,
-                    'contribucion_total' => round($contribucionPlantilla, 4)
-                ];
-            } else {
-                // Si no hay resultado para una plantilla, marcar como faltante
-                $detallesPlantillas[] = [
-                    'plantilla_id' => $plantilla->id,
-                    'plantilla_nombre' => $plantilla->nombre,
-                    'peso_plantilla' => $plantilla->peso,
-                    'puntaje_plantilla' => null,
-                    'contribucion_total' => 0,
-                    'estado' => 'faltante'
-                ];
             }
         }
-
         // Verificar que todas las plantillas tienen resultados
         if ($plantillasCalculadas < $plantillas->count()) {
             return response()->json([
@@ -146,10 +133,7 @@ class ResultadoProcesoEvaluacionController extends Controller
 
         return response()->json([
             'resultado' => $resultado,
-            'total_proceso' => round($totalProceso, 4),
-            'suma_pesos_plantillas' => $sumaPesosPlantillas,
-            'plantillas_calculadas' => $plantillasCalculadas,
-            'detalles_plantillas' => $detallesPlantillas
+            'total_proceso' => round($totalProceso, 4)
         ], 201);
     }
 
@@ -208,7 +192,7 @@ class ResultadoProcesoEvaluacionController extends Controller
             return response()->json(['message' => 'No tienes permiso para ver estos resultados.'], 403);
         }
 
-        $proceso = ProcesoEvaluacion::find($procesoId);
+        $proceso = ProcesosEvaluacion::find($procesoId);
         if (!$proceso) {
             return response()->json(['error' => 'Proceso de evaluación no encontrado'], 404);
         }
@@ -334,79 +318,5 @@ class ResultadoProcesoEvaluacionController extends Controller
         return response()->json(['message' => 'Resultado de proceso de evaluación eliminado correctamente.'], 200);
     }
 
-    /**
-     * Calcular resultados de todos los procesos para todos los equipos
-     */
-    public function calcularTodos(Request $request)
-    {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para realizar este cálculo.'], 403);
-        }
 
-        $validator = Validator::make($request->all(), [
-            'proceso_id' => 'nullable|exists:procesos_evaluacion,id',
-            'persona_id' => 'required|exists:personas,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // Si se especifica un proceso, calcular solo para ese proceso
-        if ($request->has('proceso_id')) {
-            $procesos = ProcesoEvaluacion::where('id', $request->proceso_id)->get();
-        } else {
-            // Calcular para todos los procesos
-            $procesos = ProcesoEvaluacion::all();
-        }
-
-        $resultadosCalculados = [];
-        $errores = [];
-
-        foreach ($procesos as $proceso) {
-            // Obtener equipos que tienen resultados de plantillas en este proceso
-            $equipos = DB::table('resultado_plantilla_evaluacion as rpe')
-                ->join('plantillas_evaluacion as pe', 'rpe.plantilla_id', '=', 'pe.id')
-                ->where('pe.proceso_id', $proceso->id)
-                ->select('rpe.equipo_id')
-                ->distinct()
-                ->pluck('equipo_id');
-
-            foreach ($equipos as $equipoId) {
-                try {
-                    $response = $this->store(new Request([
-                        'persona_id' => $request->persona_id,
-                        'proceso_id' => $proceso->id,
-                        'equipo_id' => $equipoId
-                    ]));
-
-                    if ($response->getStatusCode() === 201) {
-                        $resultadosCalculados[] = [
-                            'proceso_id' => $proceso->id,
-                            'proceso_nombre' => $proceso->titulo ?? 'N/A',
-                            'equipo_id' => $equipoId,
-                            'persona_id' => $request->persona_id,
-                            'estado' => 'calculado'
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    $errores[] = [
-                        'proceso_id' => $proceso->id,
-                        'equipo_id' => $equipoId,
-                        'persona_id' => $request->persona_id,
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
-        }
-
-        return response()->json([
-            'mensaje' => 'Cálculo de resultados de procesos completado',
-            'resultados_calculados' => count($resultadosCalculados),
-            'errores' => count($errores),
-            'detalles' => $resultadosCalculados,
-            'errores_detalle' => $errores
-        ]);
-    }
 }

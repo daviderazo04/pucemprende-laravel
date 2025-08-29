@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property float $total
  *
  * @property Persona $persona
- * @property ProcesoEvaluacion $proceso
+ * @property ProcesosEvaluacion $proceso
  * @property Equipo $equipo
  *
  * @package App\Models
@@ -47,7 +47,7 @@ class ResultadoProcesoEvaluacion extends Model
 
     public function proceso()
     {
-        return $this->belongsTo(ProcesoEvaluacion::class, 'proceso_id');
+        return $this->belongsTo(ProcesosEvaluacion::class, 'proceso_id');
     }
 
     public function equipo()
