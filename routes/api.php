@@ -33,6 +33,8 @@ use App\Http\Controllers\ResultadoRubricaController;
 use App\Http\Controllers\ResultadoEvaluacionController;
 use App\Http\Controllers\ProcesosEvaluacion;
 use App\Http\Controllers\RolesPlantillaController;
+use App\Http\Controllers\ResultadoPlantillaEvaluacionController;
+use App\Http\Controllers\ResultadoProcesoEvaluacionController;
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
 
@@ -205,6 +207,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/resultado-evaluacion/vista/consolidada-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getVistaConsolidadaEquipos']);
     Route::get('/resultado-evaluacion/vista/comparativa-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getVistaComparativaEquipos']);
     Route::get('/resultado-evaluacion/eventos/con-evaluaciones', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getEventosConEvaluaciones']);
+
+    // Rutas para Resultados de Plantilla de Evaluación
+    Route::apiResource('resultado-plantilla-evaluacion', ResultadoPlantillaEvaluacionController::class);
+
+    // Rutas para Resultados de Proceso de Evaluación
+    Route::apiResource('resultado-proceso-evaluacion', ResultadoProcesoEvaluacionController::class);
 
     //Para mandar correos a organizaciones
     Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);

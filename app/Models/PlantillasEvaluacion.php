@@ -12,14 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class PlantillasEvaluacion
- * 
+ *
  * @property int $id
  * @property Carbon|null $creado_en
  * @property Carbon|null $actualizado_en
  * @property int|null $proceso_id
  * @property string $nombre
  * @property float|null $peso
- * 
+ *
  * @property ProcesosEvaluacion|null $procesos_evaluacion
  * @property Collection|Criterio[] $criterios
  * @property Collection|RolesPlantilla[] $roles_plantillas
@@ -41,7 +41,8 @@ class PlantillasEvaluacion extends Model
 		'creado_en',
 		'actualizado_en',
 		'proceso_id',
-		'nombre'
+		'nombre',
+        'peso'
 	];
 
 	public function procesos_evaluacion()
