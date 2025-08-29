@@ -182,6 +182,7 @@ class ProcesosEvaluacionController extends Controller
                     $formattedPlantilla = [
                         'plantillaId' => $plantilla['plantillaId'],
                         'plantillaNombre' => $plantilla['plantillaNombre'],
+                        'plantillaPeso' => $plantilla['plantillaPeso'],
                         'plantillaCreadoEn' => $plantilla['plantillaCreadoEn'],
                         'plantillaActualizadoEn' => $plantilla['plantillaActualizadoEn'],
                         // Asegurarse de que 'criterios' existe y no es nulo antes de decodificar
@@ -325,5 +326,42 @@ class ProcesosEvaluacionController extends Controller
         }
     }
 
+    /**
+    * Update the weight of an evaluation template.
+    *
+    * @param  \Illuminate\Http\Request  $request
+    * @param  int  $plantillaId
+    * @return \Illuminate\Http\JsonResponse
+    */
+    public function updatePesoPlantilla(Request $request, $plantillaId)
+    {
+        $validated = $request->validate([
+            'peso' => 'required|numeric|min:0|max:100',
+        ]);
 
+        try {
+            $result = DB::update(
+                'UPDATE plantillas_evaluacion SET peso = ?, actualizado_en = NOW() WHERE id = ?',
+                [$validated['peso'], $plantillaId]
+            );
+
+            if ($result === 0) {
+                return response()->json(['message' => 'Plantilla no encontrada'], 404);
+            }
+
+            // Obtener la plantilla actualizada
+            $plantilla = DB::selectOne(
+                'SELECT id as plantillaId, nombre as plantillaNombre, peso as plantillaPeso, proceso_id as procesoId, creado_en as creadoEn, actualizado_en as actualizadoEn FROM plantillas_evaluacion WHERE id = ?',
+                [$plantillaId]
+            );
+
+            return response()->json([
+                'message' => 'Peso actualizado correctamente',
+                'plantilla' => $plantilla
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al actualizar el peso: ' . $e->getMessage()], 500);
+        }
+    }
 }
