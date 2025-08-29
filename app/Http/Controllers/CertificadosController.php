@@ -45,7 +45,7 @@ class CertificadosController extends Controller
                 ->where('archivo.estado_borrado', false)
                 ->select('archivo.*')
                 ->get()
-                ->filter(function($certificado) use ($rolesPersona) {
+                ->filter(function ($certificado) use ($rolesPersona) {
                     // Convertir roles_destinatarios de string a array
                     $rolesDestinatarios = explode(',', $certificado->roles_destinatarios);
                     // Verificar si hay intersección entre los roles de la persona y los roles destinatarios
@@ -58,10 +58,10 @@ class CertificadosController extends Controller
 
             // Generar PDFs para cada certificado
             $certificadosGenerados = [];
-            
+
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -69,8 +69,9 @@ class CertificadosController extends Controller
 
             foreach ($certificados as $certificado) {
                 try {
-                    // Generar PDF personalizado
-                    $pdfBasePath = storage_path('app/public/' . $certificado->url);
+                    // MODIFICADO: Convertir URL a path físico
+                    $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+                    $pdfBasePath = storage_path('app/public/' . $urlPath);
                     if (!file_exists($pdfBasePath)) {
                         continue; // Saltar este certificado si no existe el archivo
                     }
@@ -110,7 +111,6 @@ class CertificadosController extends Controller
                         'pdf_base64' => $pdfBase64,
                         'filename' => 'certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf'
                     ];
-
                 } catch (\Exception $e) {
                     // Log del error pero continuar con los otros certificados
                     continue;
@@ -133,7 +133,6 @@ class CertificadosController extends Controller
                 'certificados' => $certificadosGenerados,
                 'total_certificados' => count($certificadosGenerados)
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener los certificados',
@@ -180,15 +179,16 @@ class CertificadosController extends Controller
                 return response()->json(['message' => 'La persona no tiene los roles requeridos para este certificado'], 403);
             }
 
-            // Generar PDF
-            $pdfBasePath = storage_path('app/public/' . $certificado->url);
+            // MODIFICADO: Convertir URL a path físico
+            $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+            $pdfBasePath = storage_path('app/public/' . $urlPath);
             if (!file_exists($pdfBasePath)) {
                 return response()->json(['message' => 'Archivo base no encontrado'], 404);
             }
 
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -222,7 +222,6 @@ class CertificadosController extends Controller
             return response($pdf->Output('S'), 200)
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf"');
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al generar el certificado',
@@ -290,8 +289,8 @@ class CertificadosController extends Controller
     public function store(Request $request, $eventoId)
     {
         // Verificar permisos
-        if($request->user()->rol_id != 1 && $request->user()->rol_id != 8 && $request->user()->rol_id != 2){
-            return response()->json(['message'=>'No tienes permiso para subir certificados'], 403);
+        if ($request->user()->rol_id != 1 && $request->user()->rol_id != 8 && $request->user()->rol_id != 2) {
+            return response()->json(['message' => 'No tienes permiso para subir certificados'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -315,7 +314,7 @@ class CertificadosController extends Controller
             // Verificar que los roles existan y pertenezcan al evento
             $rolesArray = explode(',', $request->roles_destinatarios);
             $rolesValidos = \App\Models\RolEvento::whereIn('id', $rolesArray)->count();
-            
+
             if ($rolesValidos != count($rolesArray)) {
                 return response()->json(['message' => 'Uno o más roles no son válidos'], 400);
             }
@@ -323,11 +322,12 @@ class CertificadosController extends Controller
             // Subir archivo
             $file = $request->file('archivo');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('certificados', $fileName, 'public');
+            $filePath = Storage::disk('public')->putFileAs('certificados', $file, $fileName);
+            $publicUrl = asset('storage/' . $filePath);
 
             // Crear registro en tabla archivo
             $archivo = Archivo::create([
-                'url' => $filePath,
+                'url' => $publicUrl,
                 'tipo' => $request->tipo ?? 'certificado',
                 'es_certificado' => true,
                 'roles_destinatarios' => $request->roles_destinatarios, // "1,3,5"
@@ -357,7 +357,6 @@ class CertificadosController extends Controller
                     'descripcion' => $request->descripcion
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al subir el certificado',
@@ -379,7 +378,7 @@ class CertificadosController extends Controller
                 ->where('archivo.estado_borrado', false)
                 ->select('archivo.*')
                 ->get()
-                ->map(function($certificado) {
+                ->map(function ($certificado) {
                     return [
                         'id' => $certificado->id,
                         'tipo' => $certificado->tipo,
@@ -395,7 +394,6 @@ class CertificadosController extends Controller
                 'certificados' => $certificados,
                 'total' => $certificados->count()
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener los certificados',
@@ -440,7 +438,7 @@ class CertificadosController extends Controller
                 ->where('archivo.estado_borrado', false)
                 ->select('archivo.*')
                 ->get()
-                ->filter(function($certificado) use ($rolesPersona) {
+                ->filter(function ($certificado) use ($rolesPersona) {
                     // Convertir roles_destinatarios de string a array
                     $rolesDestinatarios = explode(',', $certificado->roles_destinatarios);
                     // Verificar si hay intersección entre los roles de la persona y los roles destinatarios
@@ -453,10 +451,10 @@ class CertificadosController extends Controller
 
             // Generar PDFs para cada certificado
             $certificadosGenerados = [];
-            
+
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -464,8 +462,9 @@ class CertificadosController extends Controller
 
             foreach ($certificados as $certificado) {
                 try {
-                    // Generar PDF personalizado
-                    $pdfBasePath = storage_path('app/public/' . $certificado->url);
+                    // MODIFICADO: Convertir URL a path físico
+                    $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+                    $pdfBasePath = storage_path('app/public/' . $urlPath);
                     if (!file_exists($pdfBasePath)) {
                         continue; // Saltar este certificado si no existe el archivo
                     }
@@ -505,7 +504,6 @@ class CertificadosController extends Controller
                         'pdf_base64' => $pdfBase64,
                         'filename' => 'certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf'
                     ];
-
                 } catch (\Exception $e) {
                     // Log del error pero continuar con los otros certificados
                     continue;
@@ -528,7 +526,6 @@ class CertificadosController extends Controller
                 'certificados' => $certificadosGenerados,
                 'total_certificados' => count($certificadosGenerados)
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener tus certificados',
@@ -581,15 +578,16 @@ class CertificadosController extends Controller
                 return response()->json(['message' => 'No tienes los roles requeridos para este certificado'], 403);
             }
 
-            // Generar PDF
-            $pdfBasePath = storage_path('app/public/' . $certificado->url);
+            // MODIFICADO: Convertir URL a path físico
+            $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+            $pdfBasePath = storage_path('app/public/' . $urlPath);
             if (!file_exists($pdfBasePath)) {
                 return response()->json(['message' => 'Archivo base no encontrado'], 404);
             }
 
             // CORREGIDO: usar 'nombre' y 'apellido' (singular)
             $nombreCompleto = trim($persona->nombre . ' ' . $persona->apellido);
-            
+
             // Si el nombre está vacío, usar el email como fallback
             if (empty($nombreCompleto)) {
                 $nombreCompleto = $persona->email;
@@ -623,10 +621,68 @@ class CertificadosController extends Controller
             return response($pdf->Output('S'), 200)
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="certificado_' . $certificado->tipo . '_' . str_replace(['@', '.', ' '], '_', $nombreCompleto) . '.pdf"');
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al generar el certificado',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function forceDestroy(Request $request, $eventoId, $certificadoId)
+    {
+        try {
+            // Verificar permisos - solo super administradores
+            if($request->user()->rol_id != 1){
+                return response()->json(['message'=>'No tienes permiso para eliminar permanentemente certificados'], 403);
+            }
+
+            // Verificar que el evento exista
+            $evento = \App\Models\Evento::find($eventoId);
+            if (!$evento) {
+                return response()->json(['message' => 'Evento no encontrado'], 404);
+            }
+
+            // Buscar el certificado (incluso si está soft deleted)
+            $certificado = Archivo::join('archivo_evento', 'archivo.id', '=', 'archivo_evento.archivo_id')
+                ->where('archivo_evento.evento_id', $eventoId)
+                ->where('archivo.id', $certificadoId)
+                ->where('archivo.es_certificado', true)
+                ->select('archivo.*')
+                ->first();
+
+            if (!$certificado) {
+                return response()->json(['message' => 'Certificado no encontrado'], 404);
+            }
+
+            // MODIFICADO: Convertir URL a path físico para eliminar archivo
+            $urlPath = str_replace(asset('storage/'), '', $certificado->url);
+            $filePath = storage_path('app/public/' . $urlPath);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // Eliminar registros de la base de datos
+            ArchivoEvento::where('archivo_id', $certificadoId)
+                ->where('evento_id', $eventoId)
+                ->delete();
+
+            $certificado->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificado eliminado permanentemente',
+                'certificado_eliminado' => [
+                    'id' => $certificadoId,
+                    'tipo' => $certificado->tipo,
+                    'evento_id' => $eventoId,
+                    'eliminado_permanentemente_en' => Carbon::now()->toDateTimeString()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al eliminar permanentemente el certificado',
                 'error' => $e->getMessage()
             ], 500);
         }

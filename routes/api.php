@@ -198,6 +198,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/resultado-rubrica/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByEquipo']);
     Route::get('/resultado-rubrica/estadisticas/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByPlantilla']);
     Route::get('/procesos-evaluacion/{id}/detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'showDetalle']);
+    Route::patch('/plantillas/{plantillaId}/peso', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'updatePesoPlantilla']);
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
     Route::get('/resultado-evaluacion/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByEquipo']);
@@ -241,6 +242,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Ruta certificados
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
+    Route::delete('/eventos/{eventoId}/certificados/{certificadoId}/permanente', [CertificadosController::class, 'forceDestroy']);
 });
 
 
