@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Equipo;
+use App\Models\Proyecto;
+use App\Models\EventoRolPersona;
+use App\Models\Evento;
+use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -23,19 +27,38 @@ class EquipoController extends Controller
      */
     public function store(Request $request)
     {
-        if($request->user()->rol_id!=1 && $request->user()->rol_id!=8 && $request->user()->rol_id!=2){
-            return response()->json(['message'=>'No tienes permiso para crear equipos'],403);
-        }
+
         $validator = Validator::make($request->all(),[
+            'proyecto_id'=> 'required|integer|exists:proyectos,id',
             'nombre'=> 'required|string|max:50',
             'evento_id'=> 'required|integer|exists:eventos,id',
             'ranking'=> 'nullable|integer',
         ]);
+        $persona = Persona::where('users_id', $request->user()->id)->first();
+        $proyecto = Proyecto::find($request->proyecto_id);
+        if (!$proyecto) {
+            return response()->json(['error' => 'Proyecto no encontrado'], 404);
+        }
 
+        $evento = Evento::find($request->evento_id);
+        if (!$evento) {
+            return response()->json(['error' => 'Evento no encontrado'], 404);
+        }
+
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
         if($validator->fails()){
             return response()->json(['errors'=> $validator->errors()],422);
         }
+
+        if($request->user()->rol_id!=1 && $request->user()->rol_id!=8 && $request->user()->rol_id!=2 && !$isEventAuthor){
+            return response()->json(['message'=>'No tienes permiso para crear equipos'],403);
+        }
         $equipos = Equipo::create([
+            'proyecto_id'=>$request->proyecto_id,
             'creado_en' => Carbon::now(),
             'actualizado_en' => Carbon::now(),
             'estado_borrado' => false,
@@ -124,10 +147,9 @@ class EquipoController extends Controller
      */
     public function update(Request $request, Equipo $equipo)
     {
-        if ($request->user()->rol_id != 1 && $request->user()->rol_id != 8) {
-            return response()->json(['message' => 'No tienes los permisos suficientes'], 403);
-        }
+
          $validator = Validator::make($request->all(), [
+            'proyecto_id' => 'nullable|integer|exists:proyectos,id',
             'nombre' => 'nullable|string|max:50',
             'evento_id'=> 'nullable|integer|exists:eventos,id',
             'ranking'=> 'nullable|integer',
@@ -136,8 +158,20 @@ class EquipoController extends Controller
          if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
+        $isEventAuthor = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->where('estado_borrado', false)
+            ->exists();
+        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
+            ->where('persona_id', $persona->id)
+            ->where('estado_borrado', false)
+            ->exists();
+         if ($request->user()->rol_id != 1 && $request->user()->rol_id != 8 && !$isEventAuthor && !$isRegistered) {
+            return response()->json(['message' => 'No tienes los permisos suficientes'], 403);
+        }
         $equipo->fill($request->only([
+            'proyecto_id',
             'nombre',
             'evento_id',
             'ranking',

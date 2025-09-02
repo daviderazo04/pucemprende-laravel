@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon|null $fecha_inicio
  * @property Carbon|null $fecha_fin
  *
- * @property Equipo|null $equipo
+ * @property Collection|Equipo[] $equipos
  * @property Collection|Archivo[] $archivos
  * @property Collection|MiembrosProyecto[] $miembros_proyectos
  *
@@ -37,9 +37,8 @@ class Proyecto extends Model
 	protected $casts = [
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
-		'equipo_id' => 'int',
-		'fecha_inicio' => 'datetime',
-		'fecha_fin' => 'datetime'
+		'fecha_inicio' => 'date:Y-m-d',
+		'fecha_fin' => 'date:Y-m-d'
 	];
 
 	protected $fillable = [
@@ -52,12 +51,10 @@ class Proyecto extends Model
 		'fecha_inicio',
 		'fecha_fin'
 	];
-
-     public function equipo()
+    public function equipos()
     {
-        return $this->belongsTo(Equipo::class);
+            return $this->hasMany(Equipo::class, 'proyecto_id', 'id');
     }
-
     public function evento()
     {
         return $this->hasOneThrough(Evento::class, Equipo::class, 'id', 'id', 'equipo_id', 'evento_id');
