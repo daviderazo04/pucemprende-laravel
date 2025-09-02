@@ -33,7 +33,6 @@ use App\Http\Controllers\ResultadoRubricaController;
 use App\Http\Controllers\ResultadoEvaluacionController;
 use App\Http\Controllers\ProcesosEvaluacion;
 use App\Http\Controllers\RolesPlantillaController;
-use App\Http\Controllers\ResultadoPlantillaEvaluacionController;
 use App\Http\Controllers\ResultadoProcesoEvaluacionController;
 //Para mandar correos a organizaciones
 use App\Http\Controllers\OrganizacionMailController;
@@ -198,7 +197,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/resultado-rubrica/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByEquipo']);
     Route::get('/resultado-rubrica/estadisticas/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByPlantilla']);
     Route::get('/procesos-evaluacion/{id}/detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'showDetalle']);
-    Route::patch('/plantillas/{plantillaId}/peso', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'updatePesoPlantilla']);
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
     Route::get('/resultado-evaluacion/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByEquipo']);
@@ -211,6 +209,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas para Resultados de Proceso de Evaluación
     Route::apiResource('resultado-proceso-evaluacion', ResultadoProcesoEvaluacionController::class);
+    Route::get('resultado-proceso-evaluacion/evento/{eventoId}', [ResultadoProcesoEvaluacionController::class, 'getResultadosByEvento']);
 
     //Para mandar correos a organizaciones
     Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);
@@ -239,7 +238,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Ruta certificados
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
-    Route::delete('/eventos/{eventoId}/certificados/{certificadoId}/permanente', [CertificadosController::class, 'forceDestroy']);
 });
 
 

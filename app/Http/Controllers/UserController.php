@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Models\Persona;
+use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
@@ -130,12 +131,17 @@ class UserController extends Controller
     // función para obtener las estadísticas del usuario
     public function getUserEstadisticas(Request $request)
     {
-
         try {
-            // Obtener el ID del usuario autenticado
             $userId = $request->user()->id;
+            $cacheKey = "user_estadisticas_{$userId}";
 
-            $estadisticas = DB::select('CALL GetUserEstadisticas(?)', [$userId]);
+            // Tiempo configurable desde .env (default 30 minutos)
+            $cacheTime = config('cache.user_estadisticas_ttl', 1800);
+
+            $estadisticas = Cache::remember($cacheKey, $cacheTime, function () use ($userId) {
+                $result = DB::select('CALL GetUserEstadisticas(?)', [$userId]);
+                return !empty($result) ? $result[0] : null;
+            });
 
             if (empty($estadisticas)) {
                 return response()->json([
@@ -152,7 +158,7 @@ class UserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Estadísticas obtenidas correctamente',
-                'data' => $estadisticas[0]
+                'data' => $estadisticas
             ]);
 
         } catch (\Exception $e) {
@@ -200,4 +206,15 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Usuario eliminado correctamente.'], 200);
     }
+
+    /**
+     * Invalidar cache cuando se crean/actualizan proyectos, eventos o equipos
+     */
+    private function invalidateUserEstadisticasCache($userId)
+    {
+        Cache::forget("user_estadisticas_{$userId}");
+    }
+
+    // Usar este método en otros controladores cuando se modifiquen datos relacionados
+    // Por ejemplo, en ProyectoController::store(), EventoController::store(), etc.
 }

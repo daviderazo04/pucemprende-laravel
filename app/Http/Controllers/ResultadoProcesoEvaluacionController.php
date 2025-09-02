@@ -318,5 +318,16 @@ class ResultadoProcesoEvaluacionController extends Controller
         return response()->json(['message' => 'Resultado de proceso de evaluación eliminado correctamente.'], 200);
     }
 
+    public function getResultadosByEvento(Request $request, $eventoId)
+    {
+        // Verificar permisos
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+            return response()->json(['message' => 'No tienes permiso para ver resultados de proceso de evaluación.'], 403);
+        }
+
+        $resultados = DB::select('CALL sp_resultados_por_evento_ranking(?)', [$eventoId]);
+
+        return response()->json($resultados);
+    }
 
 }

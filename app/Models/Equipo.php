@@ -12,18 +12,18 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Equipo
- * 
+ *
  * @property int $id
  * @property Carbon|null $creado_en
  * @property Carbon|null $actualizado_en
  * @property string $nombre
  * @property int|null $evento_id
  * @property int|null $ranking
- * 
+ *
  * @property Evento|null $evento
  * @property Collection|EquiposGanadore[] $equipos_ganadores
  * @property Collection|MiembrosEquipo[] $miembros_equipos
- * @property Collection|Proyecto[] $proyectos
+ * @property Proyecto|null $proyecto
  * @property Collection|ResultadosEvaluacion[] $resultados_evaluacions
  *
  * @package App\Models
@@ -34,6 +34,7 @@ class Equipo extends Model
 	public $timestamps = false;
 
 	protected $casts = [
+        'proyecto_id' => 'int',
 		'creado_en' => 'datetime',
 		'actualizado_en' => 'datetime',
 		'evento_id' => 'int',
@@ -43,6 +44,7 @@ class Equipo extends Model
 	];
 
 	protected $fillable = [
+		'proyecto_id',
 		'creado_en',
 		'actualizado_en',
 		'nombre',
@@ -52,6 +54,9 @@ class Equipo extends Model
 		'borrado_en'
 	];
 
+    public function proyecto(){
+        return $this->belongsTo(Proyecto::class);
+    }
 	public function evento()
 	{
 		return $this->belongsTo(Evento::class);
@@ -65,11 +70,6 @@ class Equipo extends Model
 	public function miembros_equipos()
 	{
 		return $this->hasMany(MiembrosEquipo::class);
-	}
-
-	public function proyectos()
-	{
-		return $this->hasMany(Proyecto::class);
 	}
 
 	public function resultados_evaluacions()
