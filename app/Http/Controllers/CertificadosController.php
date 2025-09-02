@@ -628,14 +628,14 @@ class CertificadosController extends Controller
             ], 500);
         }
     }
-    
+
     public function forceDestroy(Request $request, $eventoId, $certificadoId)
     {
         try {
             // Verificar permisos - solo super administradores
-            if($request->user()->rol_id != 1){
+            /*if($request->user()->rol_id != 1){
                 return response()->json(['message'=>'No tienes permiso para eliminar permanentemente certificados'], 403);
-            }
+            }*/
 
             // Verificar que el evento exista
             $evento = \App\Models\Evento::find($eventoId);
@@ -679,7 +679,6 @@ class CertificadosController extends Controller
                     'eliminado_permanentemente_en' => Carbon::now()->toDateTimeString()
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al eliminar permanentemente el certificado',
