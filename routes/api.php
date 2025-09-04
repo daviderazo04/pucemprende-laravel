@@ -200,11 +200,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
     Route::get('/resultado-evaluacion/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEquipo']);
-    Route::get('/resultado-evaluacion/criterio/{criterioId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByCriterio']);
-    Route::get('/resultado-evaluacion/evaluador/{evaluadorId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getByEvaluador']);
-    Route::get('/resultado-evaluacion/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getEstadisticasByEquipo']);
-    Route::get('/resultado-evaluacion/vista/consolidada-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getVistaConsolidadaEquipos']);
-    Route::get('/resultado-evaluacion/vista/comparativa-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getVistaComparativaEquipos']);
+    Route::get('/resultado-evaluacion/criterio/{criterioId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByCriterio']);
+    Route::get('/resultado-evaluacion/evaluador/{evaluadorId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEvaluador']);
+    Route::get('/resultado-evaluacion/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showEstadisticasByEquipo']);
+    Route::get('/resultado-evaluacion/vista/consolidada-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showVistaConsolidadaEquipos']);
+    Route::get('/resultado-evaluacion/vista/comparativa-equipos', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showVistaComparativaEquipos']);
     Route::get('/resultado-evaluacion/eventos/con-evaluaciones', [App\Http\Controllers\ResultadoEvaluacionController::class, 'getEventosConEvaluaciones']);
 
     // Rutas para Resultados de Proceso de Evaluación
