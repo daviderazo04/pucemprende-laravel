@@ -34,10 +34,10 @@ class UserController extends Controller
         }
         $validator = Validator::make($request->all(), [
             'usuario' => 'required|string|max:100',
-            'clave'=> 'required|string|min:100',
+            'clave' => 'required|string|min:100',
             'email' => 'required|email|unique:users,email',
             'rol_id' => 'required|exists:roles,id',
-            'estado'=> 'required|string|in:activo,inactivo',
+            'estado' => 'required|string|in:activo,inactivo',
         ]);
 
         if ($validator->fails()) {
@@ -61,7 +61,7 @@ class UserController extends Controller
     }
     public function show(Request $request, $cedula)
     {
-        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para ver este usuario.'], 403);
         }
 
@@ -74,7 +74,6 @@ class UserController extends Controller
             }
 
             return response()->json($users);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error al ejecutar la búsqueda: ' . $e->getMessage()
@@ -86,7 +85,7 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         // Solo permitir si el usuario es admin o superadmin
-        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar este usuario.'], 403);
         }
 
@@ -98,10 +97,10 @@ class UserController extends Controller
 
         $validator = Validator::make($request->all(), [
             'usuario' => 'sometimes|required|string|max:100',
-            'clave'=> 'sometimes|required|string|min:8',
+            'clave' => 'sometimes|required|string|min:8',
             'email' => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
             'rol_id' => 'sometimes|required|exists:roles,id',
-            'estado'=> 'sometimes|required|string|in:activo,inactivo',
+            'estado' => 'sometimes|required|string|in:activo,inactivo',
             'estado_borrado' => 'sometimes|boolean',
         ]);
 
@@ -122,6 +121,17 @@ class UserController extends Controller
         if ($request->has('clave')) {
             $user->clave = bcrypt($request->clave);
         }
+
+        $persona = Persona::where('users_id', $id)->first();
+
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $persona->estado_borrado = false;
+        $persona->borrado_en = null;
+        $persona->actualizado_en = Carbon::now();
+        $persona->save();
 
         $user->actualizado_en = Carbon::now();
         $user->save();
@@ -160,7 +170,6 @@ class UserController extends Controller
                 'message' => 'Estadísticas obtenidas correctamente',
                 'data' => $estadisticas
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -177,7 +186,7 @@ class UserController extends Controller
     public function destroy(Request $request, $id)
     {
         // Solo permitir si el usuario es admin o superadmin
-        if($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
+        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para eliminar este usuario.'], 403);
         }
 
