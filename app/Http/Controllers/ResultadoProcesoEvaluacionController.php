@@ -59,9 +59,15 @@ class ResultadoProcesoEvaluacionController extends Controller
             $totalProceso = DB:: select("CALL sp_calcular_resultado_proceso_evaluacion(?,?)", [$request->proceso_id, $request->equipo_id]);
             $total = $totalProceso[0]->resultado ?? 0;
 
-            $existingResult->update($request->only(['total' => $total]));
-            return response()->json($existingResult, 200);
-        }
+           $resultado = ResultadoProcesoEvaluacion::updateOrCreate([
+               'proceso_id' => $request->proceso_id,
+               'equipo_id' => $request->equipo_id,
+           ], [
+               'total' => $total,
+           ]);
+
+           return response()->json($resultado, 200);
+       }
 
         // Verificar que el proceso existe
         $proceso = ProcesosEvaluacion::find($request->proceso_id);
