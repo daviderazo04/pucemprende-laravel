@@ -27,7 +27,6 @@ class ResultadoProcesoEvaluacion extends Model
     protected $table = 'resultado_proceso_evaluacion';
 
     protected $fillable = [
-        'persona_id',
         'proceso_id',
         'equipo_id',
         'total'
@@ -40,10 +39,6 @@ class ResultadoProcesoEvaluacion extends Model
     public $timestamps = false;
 
     // Relaciones
-    public function persona()
-    {
-        return $this->belongsTo(Persona::class, 'persona_id');
-    }
 
     public function proceso()
     {

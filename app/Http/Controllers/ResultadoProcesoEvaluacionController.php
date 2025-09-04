@@ -41,7 +41,6 @@ class ResultadoProcesoEvaluacionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'persona_id' => 'required|exists:personas,id',
             'proceso_id' => 'required|exists:procesos_evaluacion,id',
             'equipo_id' => 'required|exists:equipos,id',
         ]);
@@ -51,13 +50,12 @@ class ResultadoProcesoEvaluacionController extends Controller
         }
 
         // Verificar si ya existe un resultado para esta combinación
-        $existingResult = ResultadoProcesoEvaluacion::where('persona_id', $request->persona_id)
-            ->where('proceso_id', $request->proceso_id)
+        $existingResult = ResultadoProcesoEvaluacion::where('proceso_id', $request->proceso_id)
             ->where('equipo_id', $request->equipo_id)
             ->first();
 
         if ($existingResult) {
-            return response()->json(['message' => 'Ya existe un resultado de proceso de evaluación para esta combinación de persona, proceso y equipo.'], 409);
+            return response()->json(['message' => 'Ya existe un resultado de proceso de evaluación para esta combinación de proceso y equipo.'], 409);
         }
 
         // Verificar que el proceso existe
@@ -78,63 +76,16 @@ class ResultadoProcesoEvaluacionController extends Controller
         if ($plantillas->isEmpty()) {
             return response()->json(['message' => 'No hay plantillas configuradas para este proceso'], 400);
         }
-        // else{
-        //     return response()->json(['plantillas' => $plantillas], 200);
-        // }
 
-        // Verificar que los pesos de las plantillas suman 100%
-        $sumaPesosPlantillas = $plantillas->sum('peso');
-        if (abs($sumaPesosPlantillas - 100) > 0.01) {
-            return response()->json([
-                'message' => 'Los pesos de las plantillas deben sumar 100%',
-                'suma_actual' => $sumaPesosPlantillas
-            ], 400);
-        }
-        // else{
-        //     return response()->json(['plantillas' => $sumaPesosPlantillas], 200);
-        // }
-
-        $detallesPlantillas = [];
-        $totalProceso = 0;
-        $plantillasCalculadas = 0;
-
-        foreach ($plantillas as $plantilla) {
-            // Obtener resultado ya calculado de la plantilla
-            $resultadoPlantilla = ResultadoRubrica::where('plantilla_id', $plantilla->id)
-                ->where('equipo_id', $request->equipo_id)
-                ->first();
-
-            if ($resultadoPlantilla) {
-                // Aplicar peso de la plantilla para el total del proceso
-                $contribucionPlantilla = ($resultadoPlantilla->total * ($plantilla->peso/100));
-
-                $totalProceso += $contribucionPlantilla;
-                $plantillasCalculadas++;
-            }
-        }
-        // Verificar que todas las plantillas tienen resultados
-        if ($plantillasCalculadas < $plantillas->count()) {
-            return response()->json([
-                'message' => 'No todas las plantillas tienen resultados calculados',
-                'plantillas_faltantes' => $plantillas->count() - $plantillasCalculadas,
-                'detalles' => $detallesPlantillas
-            ], 400);
-        }
-
+        $totalProceso = DB:: select("CALL sp_calcular_resultado_proceso_evaluacion(?,?)", [$request->proceso_id, $request->equipo_id]);
+        $total = $totalProceso[0]->resultado ?? 0;
         $resultado = ResultadoProcesoEvaluacion::create([
-            'persona_id' => $request->persona_id,
             'proceso_id' => $request->proceso_id,
             'equipo_id' => $request->equipo_id,
-            'total' => round($totalProceso, 2),
+            'total' => $total,
         ]);
 
-        // Cargar relaciones para la respuesta
-        $resultado->load(['persona', 'proceso', 'equipo']);
-
-        return response()->json([
-            'resultado' => $resultado,
-            'total_proceso' => round($totalProceso, 4)
-        ], 201);
+        return response()->json($resultado, 201);
     }
 
     /**

@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Class ResultadoRubrica
- * 
+ *
  * @property int $id
  * @property int|null $persona_id
  * @property int|null $plantilla_id
  * @property int|null $equipo_id
  * @property float|null $total
- * 
+ *
  * @property Persona|null $persona
- * @property PlantillaEvaluacion|null $plantilla
+ * @property PlantillasEvaluacion|null $plantilla
  * @property Equipo|null $equipo
  */
 class ResultadoRubrica extends Model
@@ -44,7 +44,7 @@ class ResultadoRubrica extends Model
 
     public function plantilla(): BelongsTo
     {
-        return $this->belongsTo(PlantillaEvaluacion::class, 'plantilla_id');
+        return $this->belongsTo(PlantillasEvaluacion::class, 'plantilla_id');
     }
 
     public function equipo(): BelongsTo

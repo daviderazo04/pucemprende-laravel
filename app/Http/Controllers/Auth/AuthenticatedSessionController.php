@@ -27,8 +27,8 @@ class AuthenticatedSessionController extends Controller
         // Intentar autenticar con email y password
         if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             return response()->json([
-                'message' => 'These credentials do not match our records.',
-                'errors' => ['email' => ['These credentials do not match our records.']]
+                'message' => 'Credenciales inválidas.',
+                'errors' => ['email' => ['Estas credenciales no coinciden con nuestros registros.']]
             ], 422);
         }
 
@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
         if ($user->estado_borrado) {
         // Cerrar la sesión si el usuario está inactivo
         Auth::logout();
-        
+
         return response()->json([
             'message' => 'El usuario está inactivo.',
             'errors' => ['email' => ['El usuario está inactivo.']]

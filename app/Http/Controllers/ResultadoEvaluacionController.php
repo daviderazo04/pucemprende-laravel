@@ -46,13 +46,15 @@ class ResultadoEvaluacionController extends Controller
             'evaluador_id' => 'required|exists:personas,id',
             'puntaje' => 'required|numeric|min:0',
             'comentarios' => 'nullable|string',
-            'rolEvento_id' => 'required|integer|exists:rolEvento,id',
-            'plantilla_id' => 'required|integer|exists:plantillas_evaluacion,id',
+            'rolEvento_id' => 'required|integer|exists:rolEvento,id'
         ]);
 
+        $plantilla = Criterio::where('id', $request->criterio_id)
+            ->first();
+        $plantilla = $plantilla->plantilla_id;
         // Verificar si el rol tiene permiso para calificar en esta plantilla
         $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
-            ->where('plantilla_id', $request->plantilla_id)
+            ->where('plantilla_id', $plantilla)
             ->first();
 
         if (!$califica) {

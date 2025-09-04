@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ResultadoRubrica;
 use App\Models\Persona;
 use App\Models\RolesPlantilla;
+use App\Models\PlantillasEvaluacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -40,8 +41,7 @@ class ResultadoRubricaController extends Controller
             'persona_id' => 'required|exists:personas,id',
             'plantilla_id' => 'required|exists:plantillas_evaluacion,id',
             'equipo_id' => 'nullable|exists:equipos,id',
-            'rolEvento_id' => 'required|integer|exists:rolEvento,id',
-            'plantilla_id' => 'required|integer|exists:plantillas_evaluacion,id',
+            'rolEvento_id' => 'required|integer|exists:rolEvento,id'
         ]);
         // Verificar si el rol tiene permiso para calificar en esta plantilla
         $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
@@ -141,13 +141,12 @@ class ResultadoRubricaController extends Controller
                 return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
             }
         }
-
-        $resultado->fill($request->only([
-            'persona_id',
-            'plantilla_id',
-            'equipo_id',
-            'total'
-        ]));
+        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [$request->equipo_id, $request->plantilla_id, $request->persona_id]);
+        // Extraer el valor del total del resultado del procedimiento almacenado
+        $total = $totalRubrica[0]->total ?? 0; //total es el campo que devuelve el procedimiento almacenado
+        $resultado->update([
+            'total' => $total
+        ]);
 
         $resultado->save();
         $resultado->load(['persona', 'plantilla', 'equipo']);
