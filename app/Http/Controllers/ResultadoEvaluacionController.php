@@ -113,7 +113,57 @@ class ResultadoEvaluacionController extends Controller
             return response()->json(['message' => 'Resultado de evaluación no encontrado.'], 404);
         }
 
-        return response()->json($resultado);
+        // Calcular la calificación original sobre 5
+        $calificacionOriginal = 0;
+        if ($resultado->criterio && $resultado->criterio->peso > 0) {
+            $calificacionOriginal = ($resultado->puntaje * 5) / $resultado->criterio->peso;
+        }
+
+        // Agregar los campos calculados al resultado
+        $resultado->puntaje_ponderado = $resultado->puntaje;
+        $resultado->calificacion_sobre_5 = round($calificacionOriginal, 2);
+
+        return response()->json([
+            'id' => $resultado->id,
+            'calificacion_sobre_5' => $resultado->calificacion_sobre_5,
+            'peso_criterio' => $resultado->criterio->peso,
+            'comentarios' => $resultado->comentarios,
+        ]);
+    }
+
+    /**
+     * Obtener todos los resultados de evaluación de un equipo específico
+     */
+    public function showByEquipo(Request $request, $equipoId)
+    {
+
+        $resultados = ResultadosEvaluacion::with(['equipo', 'criterio', 'persona'])
+            ->where('equipo_id', $equipoId)
+            ->get();
+
+        if ($resultados->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron evaluaciones para este equipo.'], 404);
+        }
+
+        // Calcular calificaciones originales y agregar información adicional
+        $resultadosConCalificaciones = $resultados->map(function ($resultado) {
+            // Calcular la calificación original sobre 5
+            $calificacionOriginal = 0;
+            if ($resultado->criterio && $resultado->criterio->peso > 0) {
+                $calificacionOriginal = ($resultado->puntaje * 5) / $resultado->criterio->peso;
+            }
+
+            return [
+                'id' => $resultado->id,
+                'criterio_id' => $resultado->criterio->id,
+                'calificacion' => round($calificacionOriginal, 2),
+                'comentarios' => $resultado->comentarios,
+            ];
+        });
+
+        return response()->json([
+            'calificaciones' => $resultadosConCalificaciones
+        ]);
     }
 
     /**
