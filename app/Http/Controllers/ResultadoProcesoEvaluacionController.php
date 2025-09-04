@@ -55,7 +55,12 @@ class ResultadoProcesoEvaluacionController extends Controller
             ->first();
 
         if ($existingResult) {
-            return response()->json(['message' => 'Ya existe un resultado de proceso de evaluación para esta combinación de proceso y equipo.'], 409);
+            //Actualizar el resultado en lugar de crear uno nuevo
+            $totalProceso = DB:: select("CALL sp_calcular_resultado_proceso_evaluacion(?,?)", [$request->proceso_id, $request->equipo_id]);
+            $total = $totalProceso[0]->resultado ?? 0;
+
+            $existingResult->update($request->only(['total' => $total]));
+            return response()->json($existingResult, 200);
         }
 
         // Verificar que el proceso existe
