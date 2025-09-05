@@ -199,7 +199,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/procesos-evaluacion/{id}/detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'showDetalle']);
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
-    Route::get('/resultado-evaluacion/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEquipo']);
+    Route::get('/resultado-evaluacion/equipo/{equipoId}/{personaId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEquipo']);
     Route::get('/resultado-evaluacion/criterio/{criterioId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByCriterio']);
     Route::get('/resultado-evaluacion/evaluador/{evaluadorId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEvaluador']);
     Route::get('/resultado-evaluacion/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showEstadisticasByEquipo']);

@@ -134,11 +134,12 @@ class ResultadoEvaluacionController extends Controller
     /**
      * Obtener todos los resultados de evaluación de un equipo específico
      */
-    public function showByEquipo(Request $request, $equipoId)
+    public function showByEquipo(Request $request, $equipoId, $personaId)
     {
 
         $resultados = ResultadosEvaluacion::with(['equipo', 'criterio', 'persona'])
             ->where('equipo_id', $equipoId)
+            ->where('evaluador_id', $personaId)
             ->get();
 
         if ($resultados->isEmpty()) {
