@@ -226,6 +226,7 @@ class ProcesosEvaluacionController extends Controller
         $validated = $request->validate([
             'proceso_id' => 'required|integer|exists:procesos_evaluacion,id',
             'nombre_plantilla' => 'required|string|max:100',
+            'peso' => 'nullable|numeric|min:0|max:100',
             'criterios' => 'nullable|array',
             'criterios.*.nombre' => 'required_with:criterios|string|max:100',
             'criterios.*.descripcion' => 'nullable|string',
@@ -238,10 +239,11 @@ class ProcesosEvaluacionController extends Controller
 
             // Llama al Stored Procedure
             $result = DB::select(
-                'CALL SP_CrearPlantillaYCriterios(?, ?, ?)',
+                'CALL SP_CrearPlantillaYCriterios(?, ?, ?, ?)',
                 [
                     $validated['proceso_id'],
                     $validated['nombre_plantilla'],
+                    $validated['peso'] ?? null,
                     $criteriosJson
                 ]
             );
@@ -256,6 +258,7 @@ class ProcesosEvaluacionController extends Controller
                     'plantillaId' => $plantillaCreada->plantillaId,
                     'plantillaNombre' => $plantillaCreada->plantillaNombre,
                     'procesoId' => $plantillaCreada->procesoId,
+                    'peso' => $plantillaCreada->peso,
                     'creadoEn' => $plantillaCreada->creadoEn,
                     'actualizadoEn' => $plantillaCreada->actualizadoEn,
                 ];
@@ -281,6 +284,7 @@ class ProcesosEvaluacionController extends Controller
         $validated = $request->validate([
             'nombre_plantilla' => 'required|string|max:100',
             'criterios' => 'nullable|array',
+            'peso' => 'nullable|numeric|min:0|max:100',
             'criterios.*.nombre' => 'required_with:criterios|string|max:100',
             'criterios.*.descripcion' => 'nullable|string',
             'criterios.*.peso' => 'nullable|numeric|min:0',
@@ -292,10 +296,11 @@ class ProcesosEvaluacionController extends Controller
 
             // Llama al Stored Procedure
             $result = DB::select(
-                'CALL SP_ActualizarPlantillaYCriterios(?, ?, ?)',
+                'CALL SP_ActualizarPlantillaYCriterios(?, ?, ?, ?)',
                 [
                     $plantillaId,
                     $validated['nombre_plantilla'],
+                    $validated['peso'],
                     $criteriosJson
                 ]
             );
