@@ -16,6 +16,7 @@ use App\Models\MiembrosProyecto;
 use Illuminate\Support\Facades\DB;
 use App\Models\Archivo; // Agregar el import del modelo Archivo
 use App\Models\ArchivoProyecto;
+use App\Models\User;
 
 class ProyectoController extends Controller
 {
@@ -523,5 +524,84 @@ class ProyectoController extends Controller
         return response()->json([
             'proyecto_ids' => $proyectoIds,
         ]);
+    }
+
+    /**
+     * Proyectos asociados a un usuario (por membresía en MiembrosProyecto).
+     * Si $userId es null usa el usuario autenticado.
+     */
+    public function ProyectosPorUsuario(Request $request, $userId = null)
+    {
+        // Resolver persona desde el userId recibido o desde el usuario autenticado
+        $user = $userId ? \App\Models\User::find($userId) : $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $persona = Persona::where('users_id', $user->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        // Proyectos donde la persona es miembro (excluye BORRADO)
+        $proyectos = Proyecto::with([
+                'equipos:id,nombre,proyecto_id',
+                'miembros' => function ($q) use ($persona) {
+                    $q->where('persona_id', $persona->id)
+                      ->select('id','proyecto_id','persona_id','rol_id');
+                },
+                'logo'
+            ])
+            ->where('estado', '!=', 'BORRADO')
+            ->whereHas('miembros', function ($q) use ($persona) {
+                $q->where('persona_id', $persona->id);
+            })
+            ->get()
+            ->map(function ($p) {
+                $logoUrl = $p->logo->first()?->url ?? null;
+                $miembro = $p->miembros->first();
+
+                return [
+                    'id' => $p->id,
+                    'titulo' => $p->titulo,
+                    'descripcion' => $p->descripcion,
+                    'estado' => $p->estado,
+                    'fecha_inicio' => $p->fecha_inicio,
+                    'fecha_fin' => $p->fecha_fin,
+                    'logoUrl' => $logoUrl,
+                    'mi_rol_id' => $miembro?->rol_id,
+                    'equipos' => $p->equipos->map(fn($e) => [
+                        'id' => $e->id,
+                        'nombre' => $e->nombre,
+                    ])->toArray(),
+                ];
+            });
+
+        return response()->json($proyectos);
+    }
+
+
+
+    public function ProyectosPorUsuarioId(Request $request, $userId)
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $persona = Persona::where('users_id', $user->id)->first();
+        if (!$persona) {
+            return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
+        }
+
+        $proyectos = Proyecto::with(['equipos:id,nombre,proyecto_id','logo'])
+            ->join('miembros_proyectos as mp', 'mp.proyecto_id', '=', 'proyectos.id')
+            ->where('mp.persona_id', $persona->id)
+            ->where('proyectos.estado', '!=', 'BORRADO')
+            ->select('proyectos.*')
+            ->distinct()
+            ->get();
+
+        return response()->json($proyectos);
     }
 }

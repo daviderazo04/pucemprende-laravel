@@ -110,6 +110,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas - Miembros de proyecto
     Route::apiResource('miembros-proyecto', MiembrosProyectoController::class);
+    // Proyectos por usuario id
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/usuarios/{userId}/proyectos', [\App\Http\Controllers\ProyectoController::class, 'ProyectosPorUsuario']);
+    });
 
     // Rutas - Roles Proyecto
     Route::apiResource('roles-proyecto', RolesProyectoController::class);
@@ -239,6 +243,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('certificados/{id}/generar', [CertificadosController::class, 'generar']);
 
 });
+
+
 
 
 
