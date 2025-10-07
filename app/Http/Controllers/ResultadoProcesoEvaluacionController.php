@@ -206,58 +206,58 @@ class ResultadoProcesoEvaluacionController extends Controller
     /**
      * Actualizar un resultado de proceso de evaluación
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $proceso_id, $equipo_id)
     {
         // Solo permitir si el usuario es admin o superadmin
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar resultados de proceso de evaluación.'], 403);
         }
 
-        $resultado = ResultadoProcesoEvaluacion::find($id);
+        // Obtener el registro por claves compuestas
+        $resultado = ResultadoProcesoEvaluacion::where('proceso_id', $proceso_id)
+            ->where('equipo_id', $equipo_id)
+            ->first();
 
         if (!$resultado) {
             return response()->json(['message' => 'Resultado de proceso de evaluación no encontrado.'], 404);
         }
 
+        // Validar posibles cambios de claves (opcionales)
         $validator = Validator::make($request->all(), [
-            'persona_id' => 'sometimes|required|exists:personas,id',
             'proceso_id' => 'sometimes|required|exists:procesos_evaluacion,id',
-            'equipo_id' => 'sometimes|required|exists:equipos,id',
-            'total' => 'sometimes|required|numeric|min:0|max:5',
+            'equipo_id'  => 'sometimes|required|exists:equipos,id',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Si se están cambiando los campos clave, verificar que no exista duplicado
-        if ($request->has('persona_id') || $request->has('proceso_id') || $request->has('equipo_id')) {
-            $persona_id = $request->has('persona_id') ? $request->persona_id : $resultado->persona_id;
-            $proceso_id = $request->has('proceso_id') ? $request->proceso_id : $resultado->proceso_id;
-            $equipo_id = $request->has('equipo_id') ? $request->equipo_id : $resultado->equipo_id;
+        // Resolver valores finales (si no vienen, usar los actuales)
+        $newProcesoId = $request->has('proceso_id') ? (int) $request->proceso_id : $resultado->proceso_id;
+        $newEquipoId  = $request->has('equipo_id')  ? (int) $request->equipo_id  : $resultado->equipo_id;
 
-            $existingResult = ResultadoProcesoEvaluacion::where('persona_id', $persona_id)
-                ->where('proceso_id', $proceso_id)
-                ->where('equipo_id', $equipo_id)
-                ->where('id', '!=', $id)
-                ->first();
-
-            if ($existingResult) {
-                return response()->json(['message' => 'Ya existe un resultado de proceso de evaluación para esta combinación de persona, proceso y equipo.'], 409);
-            }
+        // Evitar duplicados con la combinación final
+        $exists = ResultadoProcesoEvaluacion::where('proceso_id', $newProcesoId)
+            ->where('equipo_id', $newEquipoId)
+            ->where('id', '!=', $resultado->id)
+            ->exists();
+        if ($exists) {
+            return response()->json(['message' => 'Ya existe un resultado para esta combinación de proceso y equipo.'], 409);
         }
 
-        $resultado->fill($request->only([
-            'persona_id',
-            'proceso_id',
-            'equipo_id',
-            'total'
-        ]));
+        // Recalcular total con el SP usando los valores finales
+        $sp = DB::select("CALL sp_calcular_resultado_proceso_evaluacion(?,?)", [$newProcesoId, $newEquipoId]);
+        $row   = $sp[0] ?? null;
+        $total = (float) ($row->total ?? $row->resultado ?? 0);
 
-        $resultado->save();
-        $resultado->load(['persona', 'proceso', 'equipo']);
+        // Actualizar
+        $resultado->update([
+            'proceso_id' => $newProcesoId,
+            'equipo_id'  => $newEquipoId,
+            'total'      => $total,
+        ]);
 
-        return response()->json($resultado);
+        // Importante: no incluir 'persona' si el modelo no tiene esa relación
+        return response()->json($resultado->fresh(['proceso', 'equipo']));
     }
 
     /**

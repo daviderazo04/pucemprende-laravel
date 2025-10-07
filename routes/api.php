@@ -201,6 +201,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/resultado-rubrica/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByEquipo']);
     Route::get('/resultado-rubrica/estadisticas/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByPlantilla']);
     Route::get('/procesos-evaluacion/{id}/detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'showDetalle']);
+    Route::post('/resultados-rubrica/{persona_id}/{plantilla_id}/{equipo_id}', [App\Http\Controllers\ResultadoRubricaController::class, 'update']);
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
     Route::get('/resultado-evaluacion/equipo/{equipoId}/{personaId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEquipo']);
@@ -214,7 +215,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas para Resultados de Proceso de Evaluación
     Route::apiResource('resultado-proceso-evaluacion', ResultadoProcesoEvaluacionController::class);
     Route::get('resultado-proceso-evaluacion/evento/{eventoId}', [ResultadoProcesoEvaluacionController::class, 'getResultadosByEvento']);
-
+    Route::post('resultado-proceso-evaluacion/{procesoId}/{equipoId}', [ResultadoProcesoEvaluacionController::class, 'update']);
     //Para mandar correos a organizaciones
     Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);
 

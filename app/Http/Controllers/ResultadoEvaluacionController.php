@@ -178,58 +178,61 @@ class ResultadoEvaluacionController extends Controller
         }
 
         $resultado = ResultadosEvaluacion::find($id);
-
         if (!$resultado) {
             return response()->json(['message' => 'Resultado de evaluación no encontrado.'], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'equipo_id' => 'sometimes|required|exists:equipos,id',
-            'criterio_id' => 'sometimes|required|exists:criterios,id',
-            'evaluador_id' => 'sometimes|required|exists:personas,id',
-            'puntaje' => 'sometimes|required|numeric|min:0',
-            'comentarios' => 'nullable|string',
-            'evaluado_en' => 'nullable|date',
+            'equipo_id'     => 'sometimes|required|exists:equipos,id',
+            'criterio_id'   => 'sometimes|required|exists:criterios,id',
+            'evaluador_id'  => 'sometimes|required|exists:personas,id',
+            'puntaje'       => 'sometimes|required|numeric|min:0|max:5',
+            'comentarios'   => 'nullable|string',
+            'evaluado_en'   => 'nullable|date',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Si se están cambiando los campos clave, verificar que no exista duplicado
-        if ($request->has('equipo_id') || $request->has('criterio_id') || $request->has('evaluador_id')) {
-            $equipo_id = $request->has('equipo_id') ? $request->equipo_id : $resultado->equipo_id;
-            $criterio_id = $request->has('criterio_id') ? $request->criterio_id : $resultado->criterio_id;
-            $evaluador_id = $request->has('evaluador_id') ? $request->evaluador_id : $resultado->evaluador_id;
+        // Resolver IDs finales (si no vienen, usar los actuales)
+        $equipoId    = $request->has('equipo_id') ? $request->equipo_id : $resultado->equipo_id;
+        $criterioId  = $request->has('criterio_id') ? $request->criterio_id : $resultado->criterio_id;
+        $evaluadorId = $request->has('evaluador_id') ? $request->evaluador_id : $resultado->evaluador_id;
 
-            $existingEvaluation = ResultadosEvaluacion::where('equipo_id', $equipo_id)
-                ->where('criterio_id', $criterio_id)
-                ->where('evaluador_id', $evaluador_id)
-                ->where('id', '!=', $id)
-                ->first();
-
-            if ($existingEvaluation) {
-                return response()->json(['message' => 'Ya existe una evaluación para esta combinación de equipo, criterio y evaluador.'], 409);
-            }
+        // Verificar duplicado con la combinación final
+        $exists = ResultadosEvaluacion::where('equipo_id', $equipoId)
+            ->where('criterio_id', $criterioId)
+            ->where('evaluador_id', $evaluadorId)
+            ->where('id', '!=', $id)
+            ->exists();
+        if ($exists) {
+            return response()->json(['message' => 'Ya existe una evaluación para esta combinación de equipo, criterio y evaluador.'], 409);
         }
 
-        $resultado->fill($request->only([
-            'equipo_id',
-            'criterio_id',
-            'evaluador_id',
-            'puntaje',
-            'comentarios'
-        ]));
-
-        if ($request->has('evaluado_en')) {
-            $resultado->evaluado_en = $request->evaluado_en ? Carbon::parse($request->evaluado_en) : null;
+        // Obtener criterio para ponderación
+        $criterio = Criterio::find($criterioId);
+        if (!$criterio) {
+            return response()->json(['error' => 'Criterio no encontrado'], 404);
         }
 
-        $resultado->actualizado_en = Carbon::now();
-        $resultado->save();
-        $resultado->load(['equipo', 'criterio', 'persona']);
+        // Recalcular puntaje ponderado solo si viene 'puntaje'; si no, mantener el actual
+        $puntajeCalculado = $resultado->puntaje;
+        if ($request->has('puntaje')) {
+            $puntajeCalculado = ($request->puntaje * $criterio->peso) / 5;
+        }
 
-        return response()->json($resultado);
+        // Actualizar sobre la instancia (no estático)
+        $resultado->update([
+            'actualizado_en' => Carbon::now(),
+            'equipo_id'      => $equipoId,
+            'criterio_id'    => $criterioId,
+            'evaluador_id'   => $evaluadorId,
+            'puntaje'        => $puntajeCalculado,
+            'comentarios'    => $request->input('comentarios', $resultado->comentarios),
+            'evaluado_en'    => $request->input('evaluado_en', $resultado->evaluado_en),
+        ]);
+
+        return response()->json($resultado->fresh(['equipo', 'criterio', 'persona']));
     }
 
     /**

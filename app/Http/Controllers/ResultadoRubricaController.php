@@ -101,57 +101,60 @@ class ResultadoRubricaController extends Controller
     /**
      * Actualizar un resultado de rubrica
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $persona_id, $plantilla_id, $equipo_id)
     {
         // Solo permitir si el usuario es admin o superadmin
         if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
             return response()->json(['message' => 'No tienes permiso para actualizar resultados de rubrica.'], 403);
         }
 
-        $resultado = ResultadoRubrica::find($id);
+        $resultado = ResultadoRubrica::where('persona_id', $persona_id)
+            ->where('plantilla_id', $plantilla_id)
+            ->where('equipo_id', $equipo_id)
+            ->first();
 
         if (!$resultado) {
             return response()->json(['message' => 'Resultado de rubrica no encontrado.'], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'persona_id' => 'sometimes|required|exists:personas,id',
+            'persona_id'   => 'sometimes|required|exists:personas,id',
             'plantilla_id' => 'sometimes|required|exists:plantillas_evaluacion,id',
-            'equipo_id' => 'nullable|exists:equipos,id',
-            'total' => 'sometimes|required|numeric|min:0',
+            'equipo_id'    => 'nullable|exists:equipos,id',
+            'total'        => 'sometimes|required|numeric|min:0',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Si se están cambiando los campos clave, verificar que no exista duplicado
-        if ($request->has('persona_id') || $request->has('plantilla_id') || $request->has('equipo_id')) {
-            $persona_id = $request->has('persona_id') ? $request->persona_id : $resultado->persona_id;
-            $plantilla_id = $request->has('plantilla_id') ? $request->plantilla_id : $resultado->plantilla_id;
-            $equipo_id = $request->has('equipo_id') ? $request->equipo_id : $resultado->equipo_id;
+        // Resolver valores efectivos (si no vienen en el request, usar los actuales)
+        $newPersonaId   = $request->has('persona_id')   ? $request->persona_id   : $resultado->persona_id;
+        $newPlantillaId = $request->has('plantilla_id') ? $request->plantilla_id : $resultado->plantilla_id;
+        $newEquipoId    = $request->has('equipo_id')    ? $request->equipo_id    : $resultado->equipo_id;
 
-            $existingResult = ResultadoRubrica::where('persona_id', $persona_id)
-                ->where('plantilla_id', $plantilla_id)
-                ->where('equipo_id', $equipo_id)
-                ->where('id', '!=', $id)
-                ->first();
-
-            if ($existingResult) {
-                return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
-            }
+        // Verificar duplicado con la combinación final
+        $exists = ResultadoRubrica::where('persona_id', $newPersonaId)
+            ->where('plantilla_id', $newPlantillaId)
+            ->where('equipo_id', $newEquipoId)
+            ->where('id', '!=', $resultado->id)
+            ->exists();
+        if ($exists) {
+            return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
         }
-        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [$request->equipo_id, $request->plantilla_id, $request->persona_id]);
-        // Extraer el valor del total del resultado del procedimiento almacenado
-        $total = $totalRubrica[0]->total ?? 0; //total es el campo que devuelve el procedimiento almacenado
+
+        // Recalcular total usando el SP con los valores efectivos
+        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [$newEquipoId, $newPlantillaId, $newPersonaId]);
+        $total = (float) ($totalRubrica[0]->total ?? 0);
+
+        // Actualizar
         $resultado->update([
-            'total' => $total
+            'persona_id'   => $newPersonaId,
+            'plantilla_id' => $newPlantillaId,
+            'equipo_id'    => $newEquipoId,
+            'total'        => $total,
         ]);
 
-        $resultado->save();
-        $resultado->load(['persona', 'plantilla', 'equipo']);
-
-        return response()->json($resultado);
+        return response()->json($resultado->fresh(['persona', 'plantilla', 'equipo']));
     }
 
     /**
