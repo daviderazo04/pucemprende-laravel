@@ -224,6 +224,79 @@ class UserController extends Controller
         Cache::forget("user_estadisticas_{$userId}");
     }
 
-    // Usar este método en otros controladores cuando se modifiquen datos relacionados
-    // Por ejemplo, en ProyectoController::store(), EventoController::store(), etc.
+    /**
+     * Eventos en los que participa el usuario autenticado
+     */
+    public function myEventos(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+            $rows = DB::select('CALL GetUserEventos(?)', [$userId]);
+
+            if (empty($rows)) {
+                return response()->json(['message' => 'No se encontraron eventos para el usuario.'], 404);
+            }
+            return response()->json($rows, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error obteniendo eventos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proyectos en los que participa el usuario autenticado
+     */
+    public function myProyectos(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+            $rows = DB::select('CALL GetUserProyectos(?)', [$userId]);
+
+            if (empty($rows)) {
+                return response()->json(['message' => 'No se encontraron proyectos para el usuario.'], 404);
+            }
+            return response()->json($rows, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error obteniendo proyectos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Equipos en los que participa el usuario autenticado
+     */
+    public function myEquipos(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+            $rows = DB::select('CALL GetUserEquipos(?)', [$userId]);
+
+            if (empty($rows)) {
+                return response()->json(['message' => 'No se encontraron equipos para el usuario.'], 404);
+            }
+            return response()->json($rows, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error obteniendo equipos: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Consolidado: eventos, proyectos y equipos del usuario autenticado
+     */
+    public function myParticipaciones(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+
+            $eventos   = DB::select('CALL GetUserEventos(?)', [$userId]);
+            $proyectos = DB::select('CALL GetUserProyectos(?)', [$userId]);
+            $equipos   = DB::select('CALL GetUserEquipos(?)', [$userId]);
+
+            return response()->json([
+                'eventos'   => $eventos,
+                'proyectos' => $proyectos,
+                'equipos'   => $equipos,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error obteniendo participaciones: ' . $e->getMessage()], 500);
+        }
+    }
 }

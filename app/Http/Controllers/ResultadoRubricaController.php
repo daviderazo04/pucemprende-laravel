@@ -33,50 +33,47 @@ class ResultadoRubricaController extends Controller
     }
 
     /**
-     * Crear un nuevo resultado de rubrica
+     * Crear un nuevo resultado de rubrica (con upsert)
      */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'persona_id' => 'required|exists:personas,id',
+            'persona_id'   => 'required|exists:personas,id',
             'plantilla_id' => 'required|exists:plantillas_evaluacion,id',
-            'equipo_id' => 'nullable|exists:equipos,id',
+            'equipo_id'    => 'nullable|exists:equipos,id',
             'rolEvento_id' => 'required|integer|exists:rolEvento,id'
         ]);
-        // Verificar si el rol tiene permiso para calificar en esta plantilla
-        $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
-            ->where('plantilla_id', $request->plantilla_id)
-            ->first();
-
-        if (!$califica) {
-            return response()->json(['message' => 'El rol de evento no tiene permiso para calificar en este resultado rubrica.'], 403);
-        }
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Verificar si ya existe un resultado para esta combinación
-        $existingResult = ResultadoRubrica::where('persona_id', $request->persona_id)
+        // Verificar si el rol tiene permiso para calificar en esta plantilla
+        $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
             ->where('plantilla_id', $request->plantilla_id)
-            ->where('equipo_id', $request->equipo_id)
             ->first();
-
-        if ($existingResult) {
-            return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
+        if (!$califica) {
+            return response()->json(['message' => 'El rol de evento no tiene permiso para calificar en este resultado rubrica.'], 403);
         }
 
-        $totalRubrica = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [$request->equipo_id, $request->plantilla_id, $request->persona_id]);
-        // Extraer el valor del total del resultado del procedimiento almacenado
-        $total = $totalRubrica[0]->total ?? 0; //total es el campo que devuelve el procedimiento almacenado
-
-        $resultado = ResultadoRubrica::create([
-            'persona_id' => $request->persona_id,
-            'plantilla_id' => $request->plantilla_id,
-            'equipo_id' => $request->equipo_id,
-            'total' => $total,
+        // Calcular total con SP
+        $sp = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [
+            $request->equipo_id, $request->plantilla_id, $request->persona_id
         ]);
+        $total = (float) (($sp[0]->total ?? null) ?? 0);
 
-        return response()->json($resultado, 201);
+        // Upsert para evitar duplicados
+        $resultado = ResultadoRubrica::updateOrCreate(
+            [
+                'persona_id'   => $request->persona_id,
+                'plantilla_id' => $request->plantilla_id,
+                'equipo_id'    => $request->equipo_id,
+            ],
+            [
+                'total'        => $total,
+            ]
+        );
+
+        return response()->json($resultado, $resultado->wasRecentlyCreated ? 201 : 200);
     }
 
     /**
@@ -103,9 +100,21 @@ class ResultadoRubricaController extends Controller
      */
     public function update(Request $request, $persona_id, $plantilla_id, $equipo_id)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para actualizar resultados de rubrica.'], 403);
+        $validator = Validator::make($request->all(), [
+            'persona_id'   => 'sometimes|required|exists:personas,id',
+            'plantilla_id' => 'sometimes|required|exists:plantillas_evaluacion,id',
+            'equipo_id'    => 'nullable|exists:equipos,id',
+            'total'        => 'sometimes|required|numeric|min:0',
+            'rolEvento_id' => 'sometimes|required|integer|exists:rolEvento,id', // para validar permiso si llega
+        ]);
+        // Verificar si el rol tiene permiso para calificar en esta plantilla (si viene en el request)
+        if ($request->filled('rolEvento_id') || $request->filled('plantilla_id')) {
+            $califica = RolesPlantilla::where('rol_id', $request->rolEvento_id)
+                ->where('plantilla_id', $request->input('plantilla_id', $plantilla_id))
+                ->first();
+            if (!$califica) {
+                return response()->json(['message' => 'El rol de evento no tiene permiso para calificar en este resultado rubrica.'], 403);
+            }
         }
 
         $resultado = ResultadoRubrica::where('persona_id', $persona_id)
@@ -117,12 +126,6 @@ class ResultadoRubricaController extends Controller
             return response()->json(['message' => 'Resultado de rubrica no encontrado.'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'persona_id'   => 'sometimes|required|exists:personas,id',
-            'plantilla_id' => 'sometimes|required|exists:plantillas_evaluacion,id',
-            'equipo_id'    => 'nullable|exists:equipos,id',
-            'total'        => 'sometimes|required|numeric|min:0',
-        ]);
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -139,7 +142,7 @@ class ResultadoRubricaController extends Controller
             ->where('id', '!=', $resultado->id)
             ->exists();
         if ($exists) {
-            return response()->json(['message' => 'Ya existe un resultado de rubrica para esta combinación de persona, plantilla y equipo.'], 409);
+            return response()->json(['message' => 'Ya existe un resultado con la combinación persona/plantilla/equipo indicada.'], 409);
         }
 
         // Recalcular total usando el SP con los valores efectivos

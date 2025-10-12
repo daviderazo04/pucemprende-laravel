@@ -68,6 +68,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         return response()->json(['message' => 'Acceso permitido porque estás verificado']);
     })->middleware('verified');
 
+    Route::get('/me/eventos', [UserController::class, 'myEventos']);
+    Route::get('/me/proyectos', [UserController::class, 'myProyectos']);
+    Route::get('/me/equipos', [UserController::class, 'myEquipos']);
+    Route::get('/me/participaciones', [UserController::class, 'myParticipaciones']);
+
     // Rutas para el CRUD de eventos
     // La lógica de protección por rol para 'store' está en el constructor de EventoController
     // Ruta específica para eventos paginados (DEBE IR PRIMERO)
@@ -201,7 +206,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/resultado-rubrica/estadisticas/equipo/{equipoId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByEquipo']);
     Route::get('/resultado-rubrica/estadisticas/plantilla/{plantillaId}', [App\Http\Controllers\ResultadoRubricaController::class, 'getEstadisticasByPlantilla']);
     Route::get('/procesos-evaluacion/{id}/detalle', [App\Http\Controllers\Api\ProcesosEvaluacionController::class, 'showDetalle']);
+    // Update por claves compuestas (mantengo la existente y agrego PUT estándar)
     Route::post('/resultados-rubrica/{persona_id}/{plantilla_id}/{equipo_id}', [App\Http\Controllers\ResultadoRubricaController::class, 'update']);
+    Route::put('/resultado-rubrica/{persona_id}/{plantilla_id}/{equipo_id}', [App\Http\Controllers\ResultadoRubricaController::class, 'update']);
 
     Route::apiResource('resultado-evaluacion', App\Http\Controllers\ResultadoEvaluacionController::class);
     Route::get('/resultado-evaluacion/equipo/{equipoId}/{personaId}', [App\Http\Controllers\ResultadoEvaluacionController::class, 'showByEquipo']);
@@ -214,8 +221,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Rutas para Resultados de Proceso de Evaluación
     Route::apiResource('resultado-proceso-evaluacion', ResultadoProcesoEvaluacionController::class);
-    Route::get('resultado-proceso-evaluacion/evento/{eventoId}', [ResultadoProcesoEvaluacionController::class, 'getResultadosByEvento']);
-    Route::post('resultado-proceso-evaluacion/{procesoId}/{equipoId}', [ResultadoProcesoEvaluacionController::class, 'update']);
+    // Ranking del proceso (ordenado por total desc)
+    Route::get('resultado-proceso-evaluacion/proceso/{procesoId}', [ResultadoProcesoEvaluacionController::class, 'showByProceso']);
+    // Búsqueda por proceso y equipo vía querystring: ?proceso_id=1&equipo_id=2
+    Route::get('resultado-proceso-evaluacion/by', [ResultadoProcesoEvaluacionController::class, 'showByProcesoEquipo']);
+    // Todos los resultados de un equipo (en todos los procesos)
+    Route::get('resultado-proceso-evaluacion/equipo/{equipoId}', [ResultadoProcesoEvaluacionController::class, 'showByEquipo']);
+    // Actualizar/Recalcular por claves compuestas (usar PUT)
+    Route::put('resultado-proceso-evaluacion/{proceso_id}/{equipo_id}', [ResultadoProcesoEvaluacionController::class, 'update']);
+
     //Para mandar correos a organizaciones
     Route::post('/organizaciones/enviar-correo', [OrganizacionMailController::class, 'enviarCorreo']);
 

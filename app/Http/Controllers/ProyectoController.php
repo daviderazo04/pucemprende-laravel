@@ -119,11 +119,14 @@ class ProyectoController extends Controller
             return response()->json(['error' => 'Persona no encontrada para este usuario'], 404);
         }
 
-        $proyecto = Proyecto::find($request->equipo_id);
+        $proyecto = Proyecto::find($proyecto->id);
         if (!$proyecto) {
             return response()->json(['error' => 'Proyecto no encontrado'], 404);
         }
-
+        $isLeaderProject = MiembrosProyecto::where('proyecto_id', $proyecto->id)
+            ->where('persona_id', $persona->id)
+            ->where('rol_id', 1)
+            ->exists();
         // $evento = Evento::find($proyecto->evento_id);
         // if (!$evento) {
         //     return response()->json(['error' => 'Evento no encontrado para este pro$proyecto'], 404);
@@ -138,17 +141,11 @@ class ProyectoController extends Controller
         //     ->where('estado_borrado', false)
         //     ->exists();
 
-        $isRegistered = EventoRolPersona::where('evento_id', $evento->id)
-            ->where('persona_id', $persona->id)
-            ->where('estado_borrado', false)
-            ->exists();
-
-        if (!$isSystemAdmin && !$isEventAuthor && !$isRegistered) {
+        if (!$isSystemAdmin && !$isLeaderProject) {
             return response()->json(['message' => 'No tienes permiso para actualizar este evento.'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'equipo_id' => 'nullable|integer|exists:equipos,id',
             'titulo' => 'required|string|max:50',
             'descripcion' => 'required|string|max:1000',
             'estado' => 'required|string|max:20',
@@ -159,7 +156,6 @@ class ProyectoController extends Controller
         }
 
         $proyecto->fill($request->only([
-            'equipo_id',
             'titulo',
             'descripcion',
             'estado'

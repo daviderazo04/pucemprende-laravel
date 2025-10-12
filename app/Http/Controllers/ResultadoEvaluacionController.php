@@ -7,6 +7,10 @@ use App\Models\Criterio;
 use App\Models\RolEvento;
 use App\Models\Persona;
 use App\Models\RolesPlantilla;
+use App\Models\ResultadoRubrica;              // NUEVO
+use App\Models\ResultadoProcesoEvaluacion;    // NUEVO
+use App\Models\PlantillasEvaluacion;          // NUEVO
+use App\Models\ProcesosEvaluacion;            // NUEVO
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -81,18 +85,27 @@ class ResultadoEvaluacionController extends Controller
         if (!$criterio) {
             return response()->json(['error' => 'Criterio no encontrado'], 404);
         }
-        // Calcular el puntaje en base al criterio con el peso, se divide entre 5 dado que el puntaje máximo es 5
+        // Calcular el puntaje ponderado
         $puntajeCalculado = ($request->puntaje * $criterio->peso)/5;
-        $resultado = ResultadosEvaluacion::create([
-            'creado_en' => Carbon::now(),
-            'actualizado_en' => Carbon::now(),
-            'equipo_id' => $request->equipo_id,
-            'criterio_id' => $request->criterio_id,
-            'evaluador_id' => $request->evaluador_id,
-            'puntaje' => $puntajeCalculado,
-            'comentarios' => $request->comentarios,
-            'evaluado_en' => Carbon::now(),
-        ]);
+
+        // Guardar y recalcular agregados en una transacción
+        $resultado = DB::transaction(function () use ($request, $puntajeCalculado) {
+            $nuevo = ResultadosEvaluacion::create([
+                'creado_en'      => Carbon::now(),
+                'actualizado_en' => Carbon::now(),
+                'equipo_id'      => $request->equipo_id,
+                'criterio_id'    => $request->criterio_id,
+                'evaluador_id'   => $request->evaluador_id,
+                'puntaje'        => $puntajeCalculado,
+                'comentarios'    => $request->comentarios,
+                'evaluado_en'    => Carbon::now(),
+            ]);
+
+            // Recalcular agregados (rúbrica y proceso)
+            $this->recalcularAcumulados($nuevo->equipo_id, $nuevo->criterio_id, $nuevo->evaluador_id);
+
+            return $nuevo;
+        });
 
         return response()->json($resultado, 201);
     }
@@ -172,15 +185,16 @@ class ResultadoEvaluacionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Solo permitir si el usuario es admin o superadmin
-        if ($request->user()->rol_id !== 1 && $request->user()->rol_id !== 8) {
-            return response()->json(['message' => 'No tienes permiso para actualizar resultados de evaluación.'], 403);
-        }
 
         $resultado = ResultadosEvaluacion::find($id);
         if (!$resultado) {
             return response()->json(['message' => 'Resultado de evaluación no encontrado.'], 404);
         }
+
+        // Guardar snapshot de la combinación anterior (por si cambian llaves)
+        $oldEquipoId    = $resultado->equipo_id;
+        $oldCriterioId  = $resultado->criterio_id;
+        $oldEvaluadorId = $resultado->evaluador_id;
 
         $validator = Validator::make($request->all(), [
             'equipo_id'     => 'sometimes|required|exists:equipos,id',
@@ -194,45 +208,45 @@ class ResultadoEvaluacionController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Resolver IDs finales (si no vienen, usar los actuales)
-        $equipoId    = $request->has('equipo_id') ? $request->equipo_id : $resultado->equipo_id;
-        $criterioId  = $request->has('criterio_id') ? $request->criterio_id : $resultado->criterio_id;
-        $evaluadorId = $request->has('evaluador_id') ? $request->evaluador_id : $resultado->evaluador_id;
-
-        // Verificar duplicado con la combinación final
-        $exists = ResultadosEvaluacion::where('equipo_id', $equipoId)
-            ->where('criterio_id', $criterioId)
-            ->where('evaluador_id', $evaluadorId)
-            ->where('id', '!=', $id)
-            ->exists();
-        if ($exists) {
-            return response()->json(['message' => 'Ya existe una evaluación para esta combinación de equipo, criterio y evaluador.'], 409);
-        }
-
-        // Obtener criterio para ponderación
-        $criterio = Criterio::find($criterioId);
+        // Obtener criterio final para ponderación
+        $criterioId = $request->has('criterio_id') ? $request->criterio_id : $resultado->criterio_id;
+        $criterio   = Criterio::find($criterioId);
         if (!$criterio) {
             return response()->json(['error' => 'Criterio no encontrado'], 404);
         }
 
-        // Recalcular puntaje ponderado solo si viene 'puntaje'; si no, mantener el actual
+        // Recalcular puntaje ponderado solo si viene 'puntaje'
         $puntajeCalculado = $resultado->puntaje;
         if ($request->has('puntaje')) {
             $puntajeCalculado = ($request->puntaje * $criterio->peso) / 5;
         }
 
-        // Actualizar sobre la instancia (no estático)
-        $resultado->update([
-            'actualizado_en' => Carbon::now(),
-            'equipo_id'      => $equipoId,
-            'criterio_id'    => $criterioId,
-            'evaluador_id'   => $evaluadorId,
-            'puntaje'        => $puntajeCalculado,
-            'comentarios'    => $request->input('comentarios', $resultado->comentarios),
-            'evaluado_en'    => $request->input('evaluado_en', $resultado->evaluado_en),
-        ]);
+        // Actualizar y recalcular agregados en transacción
+        $actualizado = DB::transaction(function () use ($request, $resultado, $puntajeCalculado, $oldEquipoId, $oldCriterioId, $oldEvaluadorId) {
+            $resultado->update([
+                'actualizado_en' => Carbon::now(),
+                'equipo_id'      => $request->input('equipo_id', $resultado->equipo_id),
+                'criterio_id'    => $request->input('criterio_id', $resultado->criterio_id),
+                'evaluador_id'   => $request->input('evaluador_id', $resultado->evaluador_id),
+                'puntaje'        => $puntajeCalculado,
+                'comentarios'    => $request->input('comentarios', $resultado->comentarios),
+                'evaluado_en'    => $request->input('evaluado_en', $resultado->evaluado_en),
+            ]);
 
-        return response()->json($resultado->fresh(['equipo', 'criterio', 'persona']));
+            // Recalcular para la combinación NUEVA
+            $this->recalcularAcumulados($resultado->equipo_id, $resultado->criterio_id, $resultado->evaluador_id);
+
+            // Si cambió alguna de las llaves, también recalcular la combinación ANTERIOR
+            if ($oldEquipoId !== $resultado->equipo_id
+                || $oldCriterioId !== $resultado->criterio_id
+                || $oldEvaluadorId !== $resultado->evaluador_id) {
+                $this->recalcularAcumulados($oldEquipoId, $oldCriterioId, $oldEvaluadorId);
+            }
+
+            return $resultado->fresh(['equipo', 'criterio', 'persona']);
+        });
+
+        return response()->json($actualizado);
     }
 
     /**
@@ -256,4 +270,55 @@ class ResultadoEvaluacionController extends Controller
     }
 
 
+    /**
+     * Recalcula y hace upsert de:
+     *  - ResultadoRubrica (persona/equipo/plantilla)
+     *  - ResultadoProcesoEvaluacion (proceso/equipo)
+     */
+    private function recalcularAcumulados(int $equipoId, int $criterioId, int $evaluadorId): void
+    {
+        // Si algún id es nulo/no válido, salir silenciosamente
+        if (!$equipoId || !$criterioId || !$evaluadorId) {
+            return;
+        }
+
+        $criterio  = Criterio::find($criterioId);
+        if (!$criterio) return;
+
+        $plantillaId = (int) $criterio->plantilla_id;
+        $plantilla   = PlantillasEvaluacion::find($plantillaId);
+        if (!$plantilla) return;
+
+        $procesoId = (int) $plantilla->proceso_id;
+
+        // 1) Rúbrica por persona-plantilla-equipo
+        $spRubrica = DB::select("CALL sp_calcular_total_plantilla(?,?,?)", [$equipoId, $plantillaId, $evaluadorId]);
+        $totalRubrica = (float) (($spRubrica[0]->total ?? null) ?? 0);
+
+        ResultadoRubrica::updateOrCreate(
+            [
+                'persona_id'   => $evaluadorId,
+                'plantilla_id' => $plantillaId,
+                'equipo_id'    => $equipoId,
+            ],
+            [
+                'total'        => $totalRubrica,
+            ]
+        );
+
+        // 2) Total del proceso por equipo
+        $spProceso = DB::select("CALL sp_calcular_resultado_proceso_evaluacion(?,?)", [$procesoId, $equipoId]);
+        $rowProceso = $spProceso[0] ?? null;
+        $totalProceso = (float) ($rowProceso->total ?? $rowProceso->resultado ?? 0);
+
+        ResultadoProcesoEvaluacion::updateOrCreate(
+            [
+                'proceso_id' => $procesoId,
+                'equipo_id'  => $equipoId,
+            ],
+            [
+                'total'      => $totalProceso,
+            ]
+        );
+    }
 }
